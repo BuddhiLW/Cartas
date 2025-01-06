@@ -1,4 +1,4 @@
 #+title: Readme
 
 * Current
-https://elm.land/guide/user-auth.html#using-local-storage
+https://elm.land/guide/user-auth.html#fetching-user-data-with-a-token

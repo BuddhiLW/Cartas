@@ -26,12 +26,13 @@ import Shared.Msg
 
 
 type alias Flags =
-    {}
+    { accessToken : Maybe String }
 
 
 decoder : Json.Decode.Decoder Flags
 decoder =
-    Json.Decode.succeed {}
+    Json.Decode.map Flags
+        (Json.Decode.field "accessToken" (Json.Decode.maybe Json.Decode.string))
 
 
 
@@ -44,7 +45,13 @@ type alias Model =
 
 init : Result Json.Decode.Error Flags -> Route () -> ( Model, Effect Msg )
 init flagsResult route =
-    ( { token = Nothing }
+    let
+        flags : Flags
+        flags =
+            flagsResult
+                |> Result.withDefault { accessToken = Nothing }
+    in
+    ( { token = flags.accessToken }
     , Effect.none
     )
 
@@ -62,16 +69,19 @@ update route msg model =
     case msg of
         Shared.Msg.SignIn { token } ->
             ( { model | token = Just token }
-            , Effect.pushRoute
-                { path = Route.Path.Home_
-                , query = Dict.empty
-                , hash = Nothing
-                }
+            , Effect.batch
+                [ Effect.pushRoute
+                    { path = Route.Path.Home_
+                    , query = Dict.empty
+                    , hash = Nothing
+                    }
+                , Effect.saveUser token
+                ]
             )
 
         Shared.Msg.SignOut ->
             ( { model | token = Nothing }
-            , Effect.none
+            , Effect.clearUser
             )
 
 
