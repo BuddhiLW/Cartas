@@ -5,22 +5,25 @@ import Dict
 import Route exposing (Route)
 import Route.Path
 import Shared
+import Shared.Model
 import View exposing (View)
 
 
 type alias User =
-    { accessToken : String
-    }
+    Shared.Model.User
 
 
 {-| Called before an auth-only page is loaded.
 -}
 onPageLoad : Shared.Model -> Route () -> Auth.Action.Action User
 onPageLoad shared route =
-    case shared.token of
-        Just accessToken ->
-            Auth.Action.loadPageWithUser
-                { accessToken = accessToken }
+    -- case shared.token of
+    --     Just accessToken ->
+    --         Auth.Action.loadPageWithUser
+    --             { accessToken = accessToken }
+    case shared.user of
+        Just user ->
+            Auth.Action.loadPageWithUser user
 
         Nothing ->
             Auth.Action.pushRoute

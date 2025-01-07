@@ -24,6 +24,7 @@ port module Effect exposing
 
 -}
 
+import Api.Role
 import Browser.Navigation
 import Dict exposing (Dict)
 import Json.Encode
@@ -55,9 +56,17 @@ type Effect msg
 -- SHARED
 
 
-signIn : { token : String } -> Effect msg
-signIn options =
-    SendSharedMsg (Shared.Msg.SignIn options)
+signIn :
+    { token : String
+    , id : String
+    , name : String
+    , image : String
+    , email : String
+    , role : String
+    }
+    -> Effect msg
+signIn user =
+    SendSharedMsg (Shared.Msg.SignIn user)
 
 
 signOut : Effect msg
@@ -248,17 +257,33 @@ port sendToLocalStorage :
     -> Cmd msg
 
 
-saveUser : String -> Effect msg
-saveUser token =
+saveUser :
+    { token : String
+    , id : String
+    , name : String
+    , image : String
+    , email : String
+    , role : String
+    }
+    -> Effect msg
+saveUser user =
     SendToLocalStorage
-        { key = "accessToken"
-        , value = Json.Encode.string token
+        { key = "user"
+        , value =
+            Json.Encode.object
+                [ ( "token", Json.Encode.string user.token )
+                , ( "id", Json.Encode.string user.id )
+                , ( "name", Json.Encode.string user.name )
+                , ( "image", Json.Encode.string user.image )
+                , ( "email", Json.Encode.string user.email )
+                , ( "role", Json.Encode.string user.role )
+                ]
         }
 
 
 clearUser : Effect msg
 clearUser =
     SendToLocalStorage
-        { key = "accessToken"
+        { key = "user"
         , value = Json.Encode.null
         }

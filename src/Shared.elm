@@ -12,6 +12,7 @@ module Shared exposing
 
 -}
 
+import Api.Role
 import Dict
 import Effect exposing (Effect)
 import Json.Decode
@@ -26,13 +27,24 @@ import Shared.Msg
 
 
 type alias Flags =
-    { accessToken : Maybe String }
+    { user : Maybe Shared.Model.User }
 
 
 decoder : Json.Decode.Decoder Flags
 decoder =
     Json.Decode.map Flags
-        (Json.Decode.field "accessToken" (Json.Decode.maybe Json.Decode.string))
+        (Json.Decode.field "user" (Json.Decode.maybe userDecoder))
+
+
+userDecoder : Json.Decode.Decoder Shared.Model.User
+userDecoder =
+    Json.Decode.map6 Shared.Model.User
+        (Json.Decode.field "token" Json.Decode.string)
+        (Json.Decode.field "id" Json.Decode.string)
+        (Json.Decode.field "name" Json.Decode.string)
+        (Json.Decode.field "image" Json.Decode.string)
+        (Json.Decode.field "email" Json.Decode.string)
+        (Json.Decode.field "role" Json.Decode.string)
 
 
 
@@ -49,9 +61,9 @@ init flagsResult route =
         flags : Flags
         flags =
             flagsResult
-                |> Result.withDefault { accessToken = Nothing }
+                |> Result.withDefault { user = Nothing }
     in
-    ( { token = flags.accessToken }
+    ( { user = flags.user }
     , Effect.none
     )
 
@@ -67,20 +79,20 @@ type alias Msg =
 update : Route () -> Msg -> Model -> ( Model, Effect Msg )
 update route msg model =
     case msg of
-        Shared.Msg.SignIn { token } ->
-            ( { model | token = Just token }
+        Shared.Msg.SignIn user ->
+            ( { model | user = Just user }
             , Effect.batch
                 [ Effect.pushRoute
                     { path = Route.Path.Home_
                     , query = Dict.empty
                     , hash = Nothing
                     }
-                , Effect.saveUser token
+                , Effect.saveUser user
                 ]
             )
 
         Shared.Msg.SignOut ->
-            ( { model | token = Nothing }
+            ( { model | user = Nothing }
             , Effect.clearUser
             )
 

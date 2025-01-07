@@ -1,4 +1,4 @@
-module Pages.Home_ exposing (Model, Msg, page)
+module Pages.Settings exposing (Model, Msg, page)
 
 import Auth
 import Effect exposing (Effect)
@@ -24,7 +24,7 @@ page user shared route =
 toLayout : Auth.User -> Model -> Layouts.Layout Msg
 toLayout user model =
     Layouts.Sidebar
-        { title = "Dashboard"
+        { title = "Settings"
         , user = user
         }
 
@@ -76,6 +76,6 @@ subscriptions model =
 
 view : Model -> View Msg
 view model =
-    { title = "Pages.Home_"
-    , body = [ Html.text "/" ]
+    { title = "Pages.Settings"
+    , body = [ Html.text "/settings" ]
     }
