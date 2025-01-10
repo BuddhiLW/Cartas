@@ -3,6 +3,7 @@ module Pages.SignIn exposing (Model, Msg, page)
 import Api.Me
 import Api.SignIn
 import Effect exposing (Effect)
+import Element exposing (..)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events
@@ -144,9 +145,10 @@ subscriptions model =
 view : Model -> View Msg
 view model =
     { title = "Sign in"
-    , body =
-        [ viewPage model
-        ]
+    , attributes = []
+    , element =
+         Element.html (viewPage model)
+
     }
 
 

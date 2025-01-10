@@ -2,6 +2,7 @@ module Layouts.Sidebar exposing (Model, Msg, Props, layout)
 
 import Auth
 import Effect exposing (Effect)
+import Element exposing (..)
 import Html exposing (Html)
 import Html.Attributes exposing (alt, class, classList, src, style)
 import Html.Events
@@ -72,27 +73,40 @@ subscriptions model =
 view :
     Props
     -> Route ()
-    ->
-        { toContentMsg : Msg -> contentMsg
-        , content : View contentMsg
-        , model : Model
-        }
+    -> { toContentMsg : Msg -> contentMsg, content : View contentMsg, model : Model }
     -> View contentMsg
 view props route { toContentMsg, model, content } =
     { title = content.title ++ " | My Cool App"
-    , body =
-        [ Html.div [ class "is-flex", style "height" "100vh" ]
-            [ viewSidebar
-                { user = props.user
-                , route = route
-                }
-                |> Html.map toContentMsg
-            , viewMainContent
-                { title = props.title
-                , content = content
-                }
+    , attributes = []
+    , element =
+        Element.row
+            [ width fill
+            , height fill
             ]
-        ]
+            [ Element.column
+                [ Element.width (Element.fillPortion 2)
+                , Element.height Element.fill
+                ]
+                [ Element.html
+                    (viewSidebar
+                        { user = props.user
+                        , route = route
+                        }
+                        |> Html.map toContentMsg
+                    )
+                ]
+            , Element.column
+                [ Element.width (Element.fillPortion 5)
+                , Element.height Element.fill
+                ]
+                [ Element.html
+                    (viewMainContent
+                        { title = props.title
+                        , content = content
+                        }
+                    )
+                ]
+            ]
     }
 
 
@@ -101,6 +115,8 @@ viewSidebar { user, route } =
     Html.aside
         [ class "is-flex is-flex-direction-column p-2"
         , style "min-width" "200px"
+        , style "height" "100%"
+        , style "width" "100%"
         , style "border-right" "solid 1px #eee"
         ]
         [ viewAppNameAndLogo
@@ -111,7 +127,9 @@ viewSidebar { user, route } =
 
 viewAppNameAndLogo : Html msg
 viewAppNameAndLogo =
-    Html.div [ class "is-flex p-3" ]
+    Html.div
+        [ class "is-flex p-3"
+        ]
         [ Html.figure []
             [ Html.img
                 [ src "https://placehold.co/24x24"
@@ -172,11 +190,14 @@ viewSignOutButton user =
 
 viewMainContent : { title : String, content : View msg } -> Html msg
 viewMainContent { title, content } =
-    Html.main_ [ class "is-flex is-flex-direction-column is-flex-grow-1" ]
+    Html.main_
+        [ class "is-flex is-flex-direction-column is-flex-grow-1"
+        , style "width" "100%"
+        ]
         [ Html.section [ class "hero is-info" ]
             [ Html.div [ class "hero-body" ]
                 [ Html.h1 [ class "title" ] [ Html.text title ]
                 ]
             ]
-        , Html.div [ class "p-4" ] content.body
+        , Html.div [ class "p-4" ] [ Element.layout content.attributes content.element ]
         ]

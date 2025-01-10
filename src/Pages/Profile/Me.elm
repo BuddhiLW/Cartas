@@ -2,6 +2,7 @@ module Pages.Profile.Me exposing (Model, Msg, page)
 
 import Auth
 import Effect exposing (Effect)
+import Element exposing (..)
 import Html
 import Layouts
 import Page exposing (Page)
@@ -77,5 +78,8 @@ subscriptions model =
 view : Model -> View Msg
 view model =
     { title = "Pages.Profile.Me"
-    , body = [ Html.text "/profile/me" ]
+    , attributes = []
+    , element =
+        el []
+            (text "/profile/me")
     }
