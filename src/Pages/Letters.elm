@@ -2,6 +2,7 @@ module Pages.Letters exposing (Model, Msg, page)
 
 import Api.Letter
 import Auth
+import Components.DatePicker exposing (..)
 import Effect exposing (Effect)
 import Element exposing (..)
 import Element.Background as Background
@@ -55,6 +56,7 @@ type alias Model =
     , errors : List Api.Letter.Error
     , photoUploader : ImageUpload.Model
     , backgroundUploader : ImageUpload.Model
+    , datePickerModel : Components.DatePicker.Model
     }
 
 
@@ -82,16 +84,21 @@ init () =
 
         ( backgroundUploaderModel, backgroundUploaderCmd ) =
             ImageUpload.init Background ()
+
+        ( datePickerModel, datePickerCmd ) =
+            Components.DatePicker.init
     in
     ( { letterForm = emptyLetterForm
       , isLoading = False
       , errors = []
       , photoUploader = photoUploaderModel
       , backgroundUploader = backgroundUploaderModel
+      , datePickerModel = datePickerModel
       }
     , Effect.batch
         [ Effect.map PhotoUploaderMsg (Effect.sendCmd photoUploaderCmd)
         , Effect.map BackgroundUploaderMsg (Effect.sendCmd backgroundUploaderCmd)
+        , Effect.map DatePickerMsg (Effect.sendCmd datePickerCmd)
         ]
     )
 
@@ -105,6 +112,7 @@ type Msg
     | PhotoUploaderMsg ImageUpload.Msg
     | BackgroundUploaderMsg ImageUpload.Msg
     | LetterFieldInput LetterField String
+    | DatePickerMsg Components.DatePicker.Msg
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -133,6 +141,15 @@ update msg model =
 
         LetterFieldInput field inputStr ->
             letterFieldInputUpdate model field inputStr
+
+        DatePickerMsg subMsg ->
+            let
+                ( uModel, uCmd ) =
+                    Components.DatePicker.update subMsg model.datePickerModel
+            in
+            ( { model | datePickerModel = uModel }
+            , Effect.map DatePickerMsg (Effect.sendCmd uCmd)
+            )
 
 
 letterFieldInputUpdate : Model -> LetterField -> String -> ( Model, Effect Msg )
@@ -223,7 +240,8 @@ viewLetterForm model =
         , viewLetterFormInput { field = LetterName, value = model.letterForm.name }
         , viewLetterFormInput { field = LetterYearBirth, value = String.fromInt model.letterForm.yearBirth }
         , viewLetterFormInput { field = LetterYearDeath, value = String.fromInt model.letterForm.yearDeath }
-        , viewLetterFormInput { field = LetterDate, value = formatDate model.letterForm.date }
+        , Html.div [ Attr.style "position" "relative", Attr.style "z-index" "9999" ]
+            [ Components.DatePicker.view model.datePickerModel |> Html.map DatePickerMsg ]
         , viewLetterFormInput { field = LetterGraveyardName, value = model.letterForm.graveyardName }
         , Html.div [ Attr.class "field" ]
             [ Html.label [ Attr.class "label" ] [ Html.text "Photo Upload" ]
