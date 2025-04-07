@@ -4,6 +4,11 @@ import Api.Letter
 import Auth
 import Effect exposing (Effect)
 import Element exposing (..)
+import Element.Background as Background
+import Element.Border as Border
+import Element.Font as Font
+import Element.Input as Input
+import Element.Region as Region
 import File exposing (File)
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -99,6 +104,7 @@ type Msg
     = NoOp
     | PhotoUploaderMsg ImageUpload.Msg
     | BackgroundUploaderMsg ImageUpload.Msg
+    | LetterFieldInput LetterField String
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -125,6 +131,69 @@ update msg model =
             , Effect.map BackgroundUploaderMsg (Effect.sendCmd bCmd)
             )
 
+        LetterFieldInput field inputStr ->
+            letterFieldInputUpdate model field inputStr
+
+
+letterFieldInputUpdate : Model -> LetterField -> String -> ( Model, Effect Msg )
+letterFieldInputUpdate model field inputStr =
+    let
+        lf =
+            model.letterForm
+    in
+    case field of
+        LetterName ->
+            ( { model | letterForm = { lf | name = inputStr } }
+            , Effect.none
+            )
+
+        LetterYearBirth ->
+            ( { model
+                | letterForm =
+                    { lf
+                        | yearBirth =
+                            case String.toInt inputStr of
+                                Just n ->
+                                    n
+
+                                Nothing ->
+                                    model.letterForm.yearBirth
+                    }
+              }
+            , Effect.none
+            )
+
+        LetterYearDeath ->
+            ( { model
+                | letterForm =
+                    { lf
+                        | yearDeath =
+                            case String.toInt inputStr of
+                                Just n ->
+                                    n
+
+                                Nothing ->
+                                    model.letterForm.yearDeath
+                    }
+              }
+            , Effect.none
+            )
+
+        LetterDate ->
+            ( { model
+                | letterForm =
+                    { lf
+                        | date = parseDate inputStr lf.date
+                    }
+              }
+            , Effect.none
+            )
+
+        LetterGraveyardName ->
+            ( { model | letterForm = { lf | graveyardName = inputStr } }
+            , Effect.none
+            )
+
 
 
 -- SUBSCRIPTIONS
@@ -143,34 +212,132 @@ view : Model -> View Msg
 view model =
     { title = "Pages.Letters"
     , attributes = []
-    , element =
-        Html.form [ Html.Events.onSubmit NoOp ]
-            [ Html.h2 [] [ Html.text "Letter Information Form" ]
-            , Html.div []
-                [ Html.label [] [ Html.text "Name:" ]
-                , Html.input [ Attr.type_ "text", Attr.placeholder "Enter letter name" ] []
-                ]
-            , Html.div []
-                [ Html.label [] [ Html.text "Year of Birth:" ]
-                , Html.input [ Attr.type_ "number", Attr.placeholder "Year of Birth" ] []
-                ]
-            , Html.div []
-                [ Html.label [] [ Html.text "Year of Death:" ]
-                , Html.input [ Attr.type_ "number", Attr.placeholder "Year of Death" ] []
-                ]
-            , Html.div []
-                [ Html.label [] [ Html.text "Event Date:" ]
-                , Html.input [ Attr.type_ "date" ] []
-                ]
-            , Html.div []
-                [ Html.label [] [ Html.text "Graveyard Name:" ]
-                , Html.input [ Attr.type_ "text", Attr.placeholder "Graveyard Name" ] []
-                ]
-            , Html.h3 [] [ Html.text "Photo Upload" ]
-            , ImageUpload.view model.photoUploader |> Html.map PhotoUploaderMsg
-            , Html.h3 [] [ Html.text "Background Upload" ]
-            , ImageUpload.view model.backgroundUploader |> Html.map BackgroundUploaderMsg
-            , Html.button [ Attr.type_ "submit" ] [ Html.text "Submit" ]
-            ]
-            |> Element.html
+    , element = Element.html (viewLetterForm model)
     }
+
+
+viewLetterForm : Model -> Html Msg
+viewLetterForm model =
+    Html.form [ Attr.class "box", Html.Events.onSubmit NoOp ]
+        [ Html.h2 [ Attr.class "title" ] [ Html.text "Letter Information Form" ]
+        , viewLetterFormInput { field = LetterName, value = model.letterForm.name }
+        , viewLetterFormInput { field = LetterYearBirth, value = String.fromInt model.letterForm.yearBirth }
+        , viewLetterFormInput { field = LetterYearDeath, value = String.fromInt model.letterForm.yearDeath }
+        , viewLetterFormInput { field = LetterDate, value = formatDate model.letterForm.date }
+        , viewLetterFormInput { field = LetterGraveyardName, value = model.letterForm.graveyardName }
+        , Html.div [ Attr.class "field" ]
+            [ Html.label [ Attr.class "label" ] [ Html.text "Photo Upload" ]
+            , Html.div [ Attr.class "control" ]
+                [ ImageUpload.view model.photoUploader |> Html.map PhotoUploaderMsg ]
+            ]
+        , Html.div [ Attr.class "field" ]
+            [ Html.label [ Attr.class "label" ] [ Html.text "Background Upload" ]
+            , Html.div [ Attr.class "control" ]
+                [ ImageUpload.view model.backgroundUploader |> Html.map BackgroundUploaderMsg ]
+            ]
+        , viewLetterFormControls
+        ]
+
+
+viewLetterFormInput : { field : LetterField, value : String } -> Html Msg
+viewLetterFormInput { field, value } =
+    Html.div [ Attr.class "field" ]
+        [ Html.label [ Attr.class "label" ] [ Html.text (letterFieldLabel field) ]
+        , Html.div [ Attr.class "control" ]
+            [ Html.input
+                [ Attr.class "input"
+                , Attr.type_ (letterFieldInputType field)
+                , Attr.value value
+                , Html.Events.onInput (LetterFieldInput field)
+                ]
+                []
+            ]
+        ]
+
+
+viewLetterFormControls : Html Msg
+viewLetterFormControls =
+    Html.div [ Attr.class "field is-grouped is-grouped-right" ]
+        [ Html.div [ Attr.class "control" ]
+            [ Html.button [ Attr.class "button is-link", Attr.type_ "submit" ]
+                [ Html.text "Submit Letter" ]
+            ]
+        ]
+
+
+letterFieldLabel : LetterField -> String
+letterFieldLabel field =
+    case field of
+        LetterName ->
+            "Name"
+
+        LetterYearBirth ->
+            "Year of Birth"
+
+        LetterYearDeath ->
+            "Year of Death"
+
+        LetterDate ->
+            "Event Date"
+
+        LetterGraveyardName ->
+            "Graveyard Name"
+
+
+letterFieldInputType : LetterField -> String
+letterFieldInputType field =
+    case field of
+        LetterName ->
+            "text"
+
+        LetterYearBirth ->
+            "number"
+
+        LetterYearDeath ->
+            "number"
+
+        LetterDate ->
+            "date"
+
+        LetterGraveyardName ->
+            "text"
+
+
+formatDate : EventDate -> String
+formatDate eventDate =
+    let
+        pad n =
+            if n < 10 then
+                "0" ++ String.fromInt n
+
+            else
+                String.fromInt n
+    in
+    String.fromInt eventDate.year ++ "-" ++ pad eventDate.month ++ "-" ++ pad eventDate.day
+
+
+parseDate : String -> EventDate -> EventDate
+parseDate input defaultDate =
+    case String.split "-" input of
+        [ yearStr, monthStr, dayStr ] ->
+            case ( String.toInt yearStr, String.toInt monthStr, String.toInt dayStr ) of
+                ( Just y, Just m, Just d ) ->
+                    { defaultDate | year = y, month = m, day = d }
+
+                _ ->
+                    defaultDate
+
+        _ ->
+            defaultDate
+
+
+
+-- Add this type definition at the appropriate place in your file, likely near the top with other type definitions
+
+
+type LetterField
+    = LetterName
+    | LetterYearBirth
+    | LetterYearDeath
+    | LetterDate
+    | LetterGraveyardName

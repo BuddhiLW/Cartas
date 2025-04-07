@@ -7,6 +7,7 @@ import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick, preventDefaultOn)
 import Json.Decode as D
+import Maybe exposing (withDefault)
 import Shared.Model exposing (FileUpload(..), FileUploadModel, FileUploadType(..))
 import Task
 
@@ -91,32 +92,27 @@ subscriptions _ =
 
 view : Model -> Html Msg
 view model =
-    Html.form [ Html.Events.onSubmit NoOp ]
-        [ Html.h2 [] [ Html.text "Letter Information Form" ]
-        , Html.div []
-            [ Html.label [] [ Html.text "Name:" ]
-            , Html.input [ Html.Attributes.type_ "text", Html.Attributes.placeholder "Enter letter name" ] []
-            ]
-        , Html.div []
-            [ Html.label [] [ Html.text "Year of Birth:" ]
-            , Html.input [ Html.Attributes.type_ "number", Html.Attributes.placeholder "Year of Birth" ] []
-            ]
-        , Html.div []
-            [ Html.label [] [ Html.text "Year of Death:" ]
-            , Html.input [ Html.Attributes.type_ "number", Html.Attributes.placeholder "Year of Death" ] []
-            ]
-        , Html.div []
-            [ Html.label [] [ Html.text "Event Date:" ]
-            , Html.input [ Html.Attributes.type_ "date" ] []
-            ]
-        , Html.div []
-            [ Html.label [] [ Html.text "Graveyard Name:" ]
-            , Html.input [ Html.Attributes.type_ "text", Html.Attributes.placeholder "Graveyard Name" ] []
-            ]
-        , Html.h3 [] [ Html.text "Photo Upload" ]
-        , Html.h3 [] [ Html.text "Background Upload" ]
-        , Html.button [ Html.Attributes.type_ "submit" ] [ Html.text "Submit" ]
+    case model.file of
+        Nothing ->
+            viewUpload
+
+        Just file ->
+            viewPreview ""
+
+
+viewUpload : Html Msg
+viewUpload =
+    div
+        [ onClick Pick
+        , hijackOn "dragenter" (D.succeed DragEnter)
+        , hijackOn "dragleave" (D.succeed DragLeave)
+        , hijackOn "drop" dropDecoder
+        , style "border" "2px dashed #ccc"
+        , style "padding" "20px"
+        , style "text-align" "center"
+        , style "cursor" "pointer"
         ]
+        [ text "Click or drag an image here to upload" ]
 
 
 viewPreview : String -> Html msg

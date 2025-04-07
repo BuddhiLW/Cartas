@@ -161,8 +161,10 @@ viewSidebarLinks route =
         [ Html.ul [ class "menu-list" ]
             (List.map viewSidebarLink
                 [ ( "Dashboard", Route.Path.Home_ )
-                , ( "Settings", Route.Path.Settings )
-                , ( "Profile", Route.Path.Profile_Me )
+
+                -- , ( "Settings", Route.Path.Settings )
+                -- , ( "Profile", Route.Path.Profile_Me )
+                , ( "Letters", Route.Path.Letters )
                 ]
             )
         ]
