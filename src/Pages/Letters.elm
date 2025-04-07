@@ -1,27 +1,42 @@
 module Pages.Letters exposing (Model, Msg, page)
 
 import Api.Letter
+import Auth
 import Effect exposing (Effect)
 import Element exposing (..)
 import File exposing (File)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events
-import Http
+import ImageUpload exposing (..)
+import Layouts exposing (Layout)
 import Page exposing (Page)
 import Route exposing (Route)
-import Shared
-import Shared.Model as Model exposing (..)
+import Shared exposing (..)
+import Shared.Model exposing (..)
 import View exposing (View)
 
 
-page : Shared.Model -> Route () -> Page Model Msg
-page shared route =
+
+-- import ImageUpload exposing (update as uploadUpdate, view as uploadView, init as uploadInit)
+
+
+page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
+page user shared route =
     Page.new
         { init = init
         , update = update
         , subscriptions = subscriptions
         , view = view
+        }
+        |> Page.withLayout (toLayout user)
+
+
+toLayout : Auth.User -> Model -> Layouts.Layout Msg
+toLayout user model =
+    Layouts.Sidebar
+        { title = "Letters"
+        , user = user
         }
 
 
@@ -33,8 +48,8 @@ type alias Model =
     { letterForm : Letter
     , isLoading : Bool
     , errors : List Api.Letter.Error
-    , photoUploader : FileUploadModel
-    , backgroundUploader : FileUploadModel
+    , photoUploader : ImageUpload.Model
+    , backgroundUploader : ImageUpload.Model
     }
 
 
@@ -44,29 +59,35 @@ type alias Model =
 
 emptyLetterForm : Letter
 emptyLetterForm =
-    { name = ""
-    , photo = { hover = False, file = Nothing }
-    , yearBirth = 0
-    , yearDeath = 0
-    , date = EventDate 0 0 0 ""
-    , graveyardName = ""
-    , background = { hover = False, file = Nothing }
-    }
+    Letter
+        ""
+        Nothing
+        0
+        0
+        (EventDate 0 0 0 "")
+        ""
+        Nothing
 
 
 init : () -> ( Model, Effect Msg )
 init () =
     let
-        ( uModel, uCmd ) =
-            uploadInit ()
+        ( photoUploaderModel, photoUploaderCmd ) =
+            ImageUpload.init Photo ()
+
+        ( backgroundUploaderModel, backgroundUploaderCmd ) =
+            ImageUpload.init Background ()
     in
     ( { letterForm = emptyLetterForm
       , isLoading = False
       , errors = []
-      , photoUploader = uModel
-      , backgroundUploader = uModel
+      , photoUploader = photoUploaderModel
+      , backgroundUploader = backgroundUploaderModel
       }
-    , Cmd.batch [ Cmd.map PhotoUploaderMsg uCmd, Cmd.map BackgroundUploaderMsg uCmd ]
+    , Effect.batch
+        [ Effect.map PhotoUploaderMsg (Effect.sendCmd photoUploaderCmd)
+        , Effect.map BackgroundUploaderMsg (Effect.sendCmd backgroundUploaderCmd)
+        ]
     )
 
 
@@ -76,14 +97,8 @@ init () =
 
 type Msg
     = NoOp
-    | PhotoUploaderMsg FileUploadMsg
-    | BackgroundUploaderMsg FileUploadMsg
-
-
-type FileUploadMsg
-    = DragEnter
-    | DragLeave
-    | GotFile File
+    | PhotoUploaderMsg ImageUpload.Msg
+    | BackgroundUploaderMsg ImageUpload.Msg
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -95,19 +110,19 @@ update msg model =
         PhotoUploaderMsg subMsg ->
             let
                 ( uModel, uCmd ) =
-                    uploadUpdate subMsg model.photoUploader
+                    ImageUpload.update subMsg model.photoUploader
             in
             ( { model | photoUploader = uModel }
-            , Cmd.map PhotoUploaderMsg uCmd
+            , Effect.map PhotoUploaderMsg (Effect.sendCmd uCmd)
             )
 
         BackgroundUploaderMsg subMsg ->
             let
                 ( bModel, bCmd ) =
-                    uploadUpdate subMsg model.backgroundUploader
+                    ImageUpload.update subMsg model.backgroundUploader
             in
             ( { model | backgroundUploader = bModel }
-            , Cmd.map BackgroundUploaderMsg bCmd
+            , Effect.map BackgroundUploaderMsg (Effect.sendCmd bCmd)
             )
 
 
@@ -124,33 +139,38 @@ subscriptions model =
 -- VIEW
 
 
-view : Model -> Html Msg
+view : Model -> View Msg
 view model =
-    Html.form [ Html.Attributes.onSubmit NoOp ]
-        [ Html.h2 [] [ Html.text "Letter Information Form" ]
-        , Html.div []
-            [ Html.label [] [ Html.text "Name:" ]
-            , Html.input [ Html.Attributes.type_ "text", Html.Attributes.placeholder "Enter letter name" ] []
+    { title = "Pages.Letters"
+    , attributes = []
+    , element =
+        Html.form [ Html.Events.onSubmit NoOp ]
+            [ Html.h2 [] [ Html.text "Letter Information Form" ]
+            , Html.div []
+                [ Html.label [] [ Html.text "Name:" ]
+                , Html.input [ Attr.type_ "text", Attr.placeholder "Enter letter name" ] []
+                ]
+            , Html.div []
+                [ Html.label [] [ Html.text "Year of Birth:" ]
+                , Html.input [ Attr.type_ "number", Attr.placeholder "Year of Birth" ] []
+                ]
+            , Html.div []
+                [ Html.label [] [ Html.text "Year of Death:" ]
+                , Html.input [ Attr.type_ "number", Attr.placeholder "Year of Death" ] []
+                ]
+            , Html.div []
+                [ Html.label [] [ Html.text "Event Date:" ]
+                , Html.input [ Attr.type_ "date" ] []
+                ]
+            , Html.div []
+                [ Html.label [] [ Html.text "Graveyard Name:" ]
+                , Html.input [ Attr.type_ "text", Attr.placeholder "Graveyard Name" ] []
+                ]
+            , Html.h3 [] [ Html.text "Photo Upload" ]
+            , ImageUpload.view model.photoUploader |> Html.map PhotoUploaderMsg
+            , Html.h3 [] [ Html.text "Background Upload" ]
+            , ImageUpload.view model.backgroundUploader |> Html.map BackgroundUploaderMsg
+            , Html.button [ Attr.type_ "submit" ] [ Html.text "Submit" ]
             ]
-        , Html.div []
-            [ Html.label [] [ Html.text "Year of Birth:" ]
-            , Html.input [ Html.Attributes.type_ "number", Html.Attributes.placeholder "Year of Birth" ] []
-            ]
-        , Html.div []
-            [ Html.label [] [ Html.text "Year of Death:" ]
-            , Html.input [ Html.Attributes.type_ "number", Html.Attributes.placeholder "Year of Death" ] []
-            ]
-        , Html.div []
-            [ Html.label [] [ Html.text "Event Date:" ]
-            , Html.input [ Html.Attributes.type_ "date" ] []
-            ]
-        , Html.div []
-            [ Html.label [] [ Html.text "Graveyard Name:" ]
-            , Html.input [ Html.Attributes.type_ "text", Html.Attributes.placeholder "Graveyard Name" ] []
-            ]
-        , Html.h3 [] [ Html.text "Photo Upload" ]
-        , uploadView model.photoUploader |> Html.map PhotoUploaderMsg
-        , Html.h3 [] [ Html.text "Background Upload" ]
-        , uploadView model.backgroundUploader |> Html.map BackgroundUploaderMsg
-        , Html.button [ Html.Attributes.type_ "submit" ] [ Html.text "Submit" ]
-        ]
+            |> Element.html
+    }

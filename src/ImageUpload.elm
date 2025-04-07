@@ -1,4 +1,4 @@
-module ImageUpload exposing (init, main, update, view)
+module ImageUpload exposing (Model, Msg, init, main, update, view)
 
 import Browser
 import File exposing (File)
@@ -7,7 +7,8 @@ import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick, preventDefaultOn)
 import Json.Decode as D
-import Shared.Model exposing (FileUploadModel)
+import Shared.Model exposing (FileUpload(..), FileUploadModel, FileUploadType(..))
+import Task
 
 
 
@@ -16,7 +17,7 @@ import Shared.Model exposing (FileUploadModel)
 
 main =
     Browser.element
-        { init = init
+        { init = init Photo
         , view = view
         , update = update
         , subscriptions = subscriptions
@@ -31,9 +32,9 @@ type alias Model =
     FileUploadModel
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( { hover = False, file = Nothing }
+init : FileUploadType -> () -> ( Model, Cmd Msg )
+init fileType _ =
+    ( { hover = False, file = Nothing, fileType = fileType }
     , Cmd.none
     )
 
@@ -46,7 +47,8 @@ type Msg
     = Pick
     | DragEnter
     | DragLeave
-    | GotFile File
+    | GotFiles File (List File)
+    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -54,15 +56,7 @@ update msg model =
     case msg of
         Pick ->
             ( model
-            , Select.files [ "image/*" ]
-                (\files ->
-                    case files of
-                        file :: _ ->
-                            GotFile file
-
-                        [] ->
-                            DragLeave
-                )
+            , Select.files [ "image/*" ] GotFiles
             )
 
         DragEnter ->
@@ -75,10 +69,11 @@ update msg model =
             , Cmd.none
             )
 
-        GotFile file ->
-            ( { model | file = Just file, hover = False }
-            , Cmd.none
-            )
+        GotFiles _ _ ->
+            ( model, Cmd.none )
+
+        NoOp ->
+            ( model, Cmd.none )
 
 
 
@@ -96,55 +91,50 @@ subscriptions _ =
 
 view : Model -> Html Msg
 view model =
+    Html.form [ Html.Events.onSubmit NoOp ]
+        [ Html.h2 [] [ Html.text "Letter Information Form" ]
+        , Html.div []
+            [ Html.label [] [ Html.text "Name:" ]
+            , Html.input [ Html.Attributes.type_ "text", Html.Attributes.placeholder "Enter letter name" ] []
+            ]
+        , Html.div []
+            [ Html.label [] [ Html.text "Year of Birth:" ]
+            , Html.input [ Html.Attributes.type_ "number", Html.Attributes.placeholder "Year of Birth" ] []
+            ]
+        , Html.div []
+            [ Html.label [] [ Html.text "Year of Death:" ]
+            , Html.input [ Html.Attributes.type_ "number", Html.Attributes.placeholder "Year of Death" ] []
+            ]
+        , Html.div []
+            [ Html.label [] [ Html.text "Event Date:" ]
+            , Html.input [ Html.Attributes.type_ "date" ] []
+            ]
+        , Html.div []
+            [ Html.label [] [ Html.text "Graveyard Name:" ]
+            , Html.input [ Html.Attributes.type_ "text", Html.Attributes.placeholder "Graveyard Name" ] []
+            ]
+        , Html.h3 [] [ Html.text "Photo Upload" ]
+        , Html.h3 [] [ Html.text "Background Upload" ]
+        , Html.button [ Html.Attributes.type_ "submit" ] [ Html.text "Submit" ]
+        ]
+
+
+viewPreview : String -> Html msg
+viewPreview url =
     div
-        [ style "border"
-            (if model.hover then
-                "6px dashed purple"
-
-             else
-                "6px dashed #ccc"
-            )
-        , style "border-radius" "20px"
-        , style "width" "480px"
-        , style "height" "100px"
-        , style "margin" "100px auto"
-        , style "padding" "20px"
-        , style "display" "flex"
-        , style "flex-direction" "column"
-        , style "justify-content" "center"
-        , style "align-items" "center"
-        , hijackOn "dragenter" (D.succeed DragEnter)
-        , hijackOn "dragover" (D.succeed DragEnter)
-        , hijackOn "dragleave" (D.succeed DragLeave)
-        , hijackOn "drop" dropDecoder
+        [ style "width" "60px"
+        , style "height" "60px"
+        , style "background-image" ("url('" ++ url ++ "')")
+        , style "background-position" "center"
+        , style "background-repeat" "no-repeat"
+        , style "background-size" "contain"
         ]
-        [ button [ onClick Pick ] [ text "Upload Image" ]
-        , span [ style "color" "#ccc" ] [ text (displayFile model.file) ]
-        ]
-
-
-displayFile : Maybe File -> String
-displayFile maybeFile =
-    case maybeFile of
-        Nothing ->
-            "No file selected"
-
-        Just file ->
-            "File selected: " ++ File.name file
+        []
 
 
 dropDecoder : D.Decoder Msg
 dropDecoder =
-    D.at [ "dataTransfer", "files" ] (D.list File.decoder)
-        |> D.map
-            (\files ->
-                case files of
-                    file :: _ ->
-                        GotFile file
-
-                    [] ->
-                        DragLeave
-            )
+    D.at [ "dataTransfer", "files" ] (D.oneOrMore GotFiles File.decoder)
 
 
 hijackOn : String -> D.Decoder msg -> Html.Attribute msg
@@ -155,3 +145,17 @@ hijackOn event decoder =
 hijack : msg -> ( msg, Bool )
 hijack msg =
     ( msg, True )
+
+
+
+-- Helper function to determine if the file is a photo
+
+
+isPhoto : File -> Bool
+isPhoto file =
+    -- Implement logic to check the file type (e.g., by extension or MIME type)
+    True
+
+
+
+-- Placeholder logic, replace with actual implementation

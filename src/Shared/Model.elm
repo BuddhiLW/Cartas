@@ -1,12 +1,11 @@
 module Shared.Model exposing
-    ( Background
-    , DateBirth
-    , EventDate
+    ( EventDate
+    , FileUpload
     , FileUploadModel
+    , FileUploadType(..)
     , GraveyardName
     , Letter
     , Model
-    , Photo
     , User
     , YearBirth
     , YearDeath
@@ -31,12 +30,12 @@ type alias User =
 
 type alias Letter =
     { name : String
-    , photo : Photo
+    , photo : Maybe File
     , yearBirth : YearBirth
     , yearDeath : YearDeath
     , date : EventDate
     , graveyardName : GraveyardName
-    , background : Background
+    , background : Maybe File
     }
 
 
@@ -46,13 +45,6 @@ type alias YearBirth =
 
 type alias YearDeath =
     Int
-
-
-type alias DateBirth =
-    { year : Int
-    , month : Int
-    , day : Int
-    }
 
 
 type alias EventDate =
@@ -67,15 +59,17 @@ type alias GraveyardName =
     String
 
 
-type alias Background =
-    File
+type FileUploadType
+    = Photo
+    | Background
 
 
-type alias Photo =
-    File
+type FileUpload
+    = FileUpload FileUploadType File
 
 
 type alias FileUploadModel =
     { hover : Bool
-    , file : Maybe File
+    , file : Maybe FileUpload
+    , fileType : FileUploadType
     }
