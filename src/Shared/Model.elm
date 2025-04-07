@@ -1,15 +1,20 @@
-module Shared.Model exposing (Model, User)
+module Shared.Model exposing
+    ( Background
+    , DateBirth
+    , EventDate
+    , FileUploadModel
+    , GraveyardName
+    , Letter
+    , Model
+    , Photo
+    , User
+    , YearBirth
+    , YearDeath
+    )
 
-{-| -}
+import File exposing (File)
 
 
-{-| Normally, this value would live in "Shared.elm"
-but that would lead to a circular dependency import cycle.
-
-For that reason, both `Shared.Model` and `Shared.Msg` are in their
-own file, so they can be imported by `Effect.elm`
-
--}
 type alias Model =
     { user : Maybe User }
 
@@ -21,4 +26,56 @@ type alias User =
     , image : String
     , email : String
     , role : String
+    }
+
+
+type alias Letter =
+    { name : String
+    , photo : Photo
+    , yearBirth : YearBirth
+    , yearDeath : YearDeath
+    , date : EventDate
+    , graveyardName : GraveyardName
+    , background : Background
+    }
+
+
+type alias YearBirth =
+    Int
+
+
+type alias YearDeath =
+    Int
+
+
+type alias DateBirth =
+    { year : Int
+    , month : Int
+    , day : Int
+    }
+
+
+type alias EventDate =
+    { day : Int
+    , month : Int
+    , year : Int
+    , time : String
+    }
+
+
+type alias GraveyardName =
+    String
+
+
+type alias Background =
+    File
+
+
+type alias Photo =
+    File
+
+
+type alias FileUploadModel =
+    { hover : Bool
+    , file : Maybe File
     }

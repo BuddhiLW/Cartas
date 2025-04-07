@@ -38,7 +38,7 @@ get options =
     let
         url : String
         url =
-            "http://localhost:8009/user"
+            "http://localhost:8009/user/data"
 
         headers : List Http.Header
         headers =

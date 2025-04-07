@@ -118,7 +118,19 @@ update msg model =
                 error : Api.SignIn.Error
                 error =
                     { field = Nothing
-                    , message = "User couldn't be found"
+                    , message =
+                        case httpError of
+                            Http.BadStatus 401 ->
+                                "Bad request. Please check your input."
+
+                            Http.BadStatus 404 ->
+                                "User not found. Please check your credentials."
+
+                            Http.BadStatus 500 ->
+                                "Server error. Please try again later."
+
+                            _ ->
+                                "An unexpected error occurred."
                     }
             in
             ( { model
@@ -147,8 +159,7 @@ view model =
     { title = "Sign in"
     , attributes = []
     , element =
-         Element.html (viewPage model)
-
+        Element.html (viewPage model)
     }
 
 

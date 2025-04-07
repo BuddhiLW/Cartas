@@ -88,16 +88,39 @@ handleHttpResponse response =
                 ]
 
         Http.BadStatus_ { statusCode } body ->
-            case Json.Decode.decodeString errorsDecoder body of
-                Ok errors ->
-                    Err errors
-
-                Err _ ->
+            case statusCode of
+                401 ->
                     Err
-                        [ { message = "Something unexpected happened"
+                        [ { message = "Unauthorized: Invalid email or password."
                           , field = Nothing
                           }
                         ]
+
+                404 ->
+                    Err
+                        [ { message = "Not Found: The requested resource could not be found."
+                          , field = Nothing
+                          }
+                        ]
+
+                500 ->
+                    Err
+                        [ { message = "Server Error: Please try again later."
+                          , field = Nothing
+                          }
+                        ]
+
+                _ ->
+                    case Json.Decode.decodeString errorsDecoder body of
+                        Ok errors ->
+                            Err errors
+
+                        Err _ ->
+                            Err
+                                [ { message = "Something unexpected happened"
+                                  , field = Nothing
+                                  }
+                                ]
 
         Http.GoodStatus_ _ body ->
             case Json.Decode.decodeString decoder body of
