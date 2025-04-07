@@ -112,7 +112,7 @@ viewUpload =
         , style "text-align" "center"
         , style "cursor" "pointer"
         ]
-        [ text "Click or drag an image here to upload" ]
+        [ text "Clique ou arraste uma imagem aqui para fazer o upload" ]
 
 
 viewPreview : String -> Html msg

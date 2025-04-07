@@ -235,8 +235,8 @@ view model =
 
 viewLetterForm : Model -> Html Msg
 viewLetterForm model =
-    Html.form [ Attr.class "box", Html.Events.onSubmit NoOp ]
-        [ Html.h2 [ Attr.class "title" ] [ Html.text "Letter Information Form" ]
+    Html.form [ Attr.class "box is-centered is-fullwidth", Html.Events.onSubmit NoOp ]
+        [ Html.h2 [ Attr.class "title" ] [ Html.text "Formulário de Nota de Falecimento" ]
         , viewLetterFormInput { field = LetterName, value = model.letterForm.name }
         , viewLetterFormInput { field = LetterYearBirth, value = String.fromInt model.letterForm.yearBirth }
         , viewLetterFormInput { field = LetterYearDeath, value = String.fromInt model.letterForm.yearDeath }
@@ -244,12 +244,12 @@ viewLetterForm model =
             [ Components.DatePicker.view model.datePickerModel |> Html.map DatePickerMsg ]
         , viewLetterFormInput { field = LetterGraveyardName, value = model.letterForm.graveyardName }
         , Html.div [ Attr.class "field" ]
-            [ Html.label [ Attr.class "label" ] [ Html.text "Photo Upload" ]
+            [ Html.label [ Attr.class "label" ] [ Html.text "Foto do Perfil (opcional)" ]
             , Html.div [ Attr.class "control" ]
                 [ ImageUpload.view model.photoUploader |> Html.map PhotoUploaderMsg ]
             ]
         , Html.div [ Attr.class "field" ]
-            [ Html.label [ Attr.class "label" ] [ Html.text "Background Upload" ]
+            [ Html.label [ Attr.class "label" ] [ Html.text "Imagem de Fundo da Nota" ]
             , Html.div [ Attr.class "control" ]
                 [ ImageUpload.view model.backgroundUploader |> Html.map BackgroundUploaderMsg ]
             ]
@@ -287,19 +287,19 @@ letterFieldLabel : LetterField -> String
 letterFieldLabel field =
     case field of
         LetterName ->
-            "Name"
+            "Nome"
 
         LetterYearBirth ->
-            "Year of Birth"
+            "Ano de Nascimento"
 
         LetterYearDeath ->
-            "Year of Death"
+            "Ano de Falecimento"
 
         LetterDate ->
-            "Event Date"
+            "Data do Enterro"
 
         LetterGraveyardName ->
-            "Graveyard Name"
+            "Nome do Cemitério"
 
 
 letterFieldInputType : LetterField -> String

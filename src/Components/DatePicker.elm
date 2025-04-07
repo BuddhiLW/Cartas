@@ -66,10 +66,10 @@ init =
 view : Model -> Html Msg
 view model =
     DatePicker.input
-        [ Element.width (Element.px 180)
+        [ Element.width (Element.px 200)
         , Element.centerX
         , Element.centerY
-        , Element.padding 42
+        , Element.padding 10
         , Background.color (Element.rgb255 100 200 255)
         , Border.color (Element.rgb255 0 100 200)
         , Border.rounded 5
@@ -82,12 +82,13 @@ view model =
         , Events.onMouseEnter OnMouseEnter
         , Events.onMouseLeave OnMouseLeave
         , Events.onMouseMove OnMouseMove
+        , Font.center
         ]
         { onChange = ChangePicker
         , selected = model.date
         , text = model.dateText
-        , label = Input.labelAbove [] <| Element.text "Data do Enterro"
-        , placeholder = Just <| Input.placeholder [] <| Element.text "Dia/Mês/Ano"
+        , label = Input.labelAbove [ Font.center, Font.size 20, Font.bold ] <| Element.text "Data do Enterro"
+        , placeholder = Just <| Input.placeholder [ Font.center, Font.size 18, Font.bold ] <| Element.text "Dia/Mês/Ano"
         , settings = settings
         , model = model.pickerModel
         }
@@ -106,7 +107,7 @@ update msg model =
                 DateChanged date ->
                     ( { model
                         | date = Just date
-                        , dateText = Date.toIsoString date
+                        , dateText = Date.format "dd/MM/yyyy" date
                         , pickerModel = model.pickerModel |> DatePicker.close
                       }
                     , Cmd.none
@@ -145,10 +146,11 @@ settings =
             DatePicker.defaultSettings
     in
     { default
-        | pickerAttributes = [ Border.width 1, Border.color (Element.rgb255 100 150 200) ]
+        | pickerAttributes = [ Border.width 1, Border.color (Element.rgb255 100 150 200), Border.rounded 5 ]
         , headerAttributes = [ Element.width Element.fill, Font.bold, Background.color (Element.rgb255 80 180 255) ]
-        , tableAttributes = [ padding 6, Background.color (Element.rgb255 200 230 255) ]
+        , tableAttributes = [ padding 5, Background.color (Element.rgb255 200 230 255) ]
         , language = languagePt
+        , headerButtonsAttributes = [ padding 5 ]
 
         --     , weekdayAttributes = [ Font.color (Element.rgb255 50 50 50) ]
         --    , dayAttributes = []
