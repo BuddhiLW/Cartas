@@ -1,6 +1,7 @@
 module ImageUpload exposing (Model, Msg, init, main, update, view)
 
 import Browser
+import Debug
 import File exposing (File)
 import File.Select as Select
 import Html exposing (Html, button, div, span, text)
@@ -30,12 +31,18 @@ main =
 
 
 type alias Model =
-    FileUploadModel
+    { hover : Bool
+    , file : Maybe FileUpload -- This should match FileUploadModel
+    , fileType : FileUploadType
+    }
 
 
 init : FileUploadType -> () -> ( Model, Cmd Msg )
 init fileType _ =
-    ( { hover = False, file = Nothing, fileType = fileType }
+    ( { hover = False
+      , file = Nothing
+      , fileType = fileType
+      }
     , Cmd.none
     )
 
@@ -70,8 +77,24 @@ update msg model =
             , Cmd.none
             )
 
-        GotFiles _ _ ->
-            ( model, Cmd.none )
+        GotFiles firstFile remainingFiles ->
+            let
+                _ =
+                    Debug.log "GotFiles called with"
+                        { first = firstFile
+                        , rest = remainingFiles
+                        }
+
+                newModel =
+                    { model
+                        | file = Just (FileUpload model.fileType firstFile)
+                        , hover = False
+                    }
+
+                _ =
+                    Debug.log "Updated model" newModel
+            in
+            ( newModel, Cmd.none )
 
         NoOp ->
             ( model, Cmd.none )
@@ -94,38 +117,57 @@ view : Model -> Html Msg
 view model =
     case model.file of
         Nothing ->
-            viewUpload
+            viewUpload model
 
-        Just file ->
-            viewPreview ""
+        Just (FileUpload _ file) ->
+            viewPreview (File.name file)
 
 
-viewUpload : Html Msg
-viewUpload =
+viewUpload : Model -> Html Msg
+viewUpload model =
     div
         [ onClick Pick
         , hijackOn "dragenter" (D.succeed DragEnter)
+        , hijackOn "dragover" (D.succeed DragEnter)
         , hijackOn "dragleave" (D.succeed DragLeave)
         , hijackOn "drop" dropDecoder
         , style "border" "2px dashed #ccc"
+        , style "border-radius" "8px"
         , style "padding" "20px"
         , style "text-align" "center"
         , style "cursor" "pointer"
+        , style "transition" "all 0.3s ease"
+        , style "border-color"
+            (if model.hover then
+                "#666"
+
+             else
+                "#ccc"
+            )
         ]
         [ text "Clique ou arraste uma imagem aqui para fazer o upload" ]
 
 
 viewPreview : String -> Html msg
-viewPreview url =
+viewPreview fileName =
     div
-        [ style "width" "60px"
-        , style "height" "60px"
-        , style "background-image" ("url('" ++ url ++ "')")
-        , style "background-position" "center"
-        , style "background-repeat" "no-repeat"
-        , style "background-size" "contain"
+        [ style "display" "flex"
+        , style "flex-direction" "column"
+        , style "align-items" "center"
+        , style "gap" "8px"
         ]
-        []
+        [ div
+            [ style "width" "100px"
+            , style "height" "100px"
+            , style "background" "#f0f0f0"
+            , style "border-radius" "4px"
+            , style "padding" "8px"
+            ]
+            [ text "Preview will show here" ]
+        , span
+            [ style "font-size" "0.8em" ]
+            [ text fileName ]
+        ]
 
 
 dropDecoder : D.Decoder Msg

@@ -3,8 +3,10 @@ module Pages.Letters exposing (Model, Msg, page)
 import Api.Letter
 import Auth
 import Components.DatePicker exposing (..)
+import Debug
 import Effect exposing (Effect)
 import Element exposing (..)
+import File exposing (File)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events
@@ -117,19 +119,69 @@ update msg model =
 
         PhotoUploaderMsg subMsg ->
             let
-                ( uModel, uCmd ) =
+                _ =
+                    Debug.log "PhotoUploaderMsg" subMsg
+
+                ( updatedUploader, uploaderCmd ) =
                     ImageUpload.update subMsg model.photoUploader
+
+                _ =
+                    Debug.log "Updated uploader state"
+                        { file = updatedUploader.file
+                        , type_ = updatedUploader.fileType
+                        }
+
+                lf =
+                    model.letterForm
+
+                updatedLetterForm =
+                    case updatedUploader.file of
+                        Just (FileUpload _ file) ->
+                            let
+                                _ =
+                                    Debug.log "Updating letter with file" (File.name file)
+                            in
+                            { lf | photo = Just file }
+
+                        Nothing ->
+                            model.letterForm
+
+                newModel =
+                    { model
+                        | photoUploader = updatedUploader
+                        , letterForm = updatedLetterForm
+                    }
+
+                _ =
+                    Debug.log "Final model state"
+                        { photoUploaderFile = newModel.photoUploader.file
+                        , letterFormPhoto = newModel.letterForm.photo
+                        }
             in
-            ( { model | photoUploader = uModel }
-            , Effect.map PhotoUploaderMsg (Effect.sendCmd uCmd)
+            ( newModel
+            , Effect.map PhotoUploaderMsg (Effect.sendCmd uploaderCmd)
             )
 
         BackgroundUploaderMsg subMsg ->
             let
                 ( bModel, bCmd ) =
                     ImageUpload.update subMsg model.backgroundUploader
+
+                lf =
+                    model.letterForm
+
+                newLetterForm =
+                    case bModel.file of
+                        Just (FileUpload _ file) ->
+                            { lf | background = Just file }
+
+                        Nothing ->
+                            lf
             in
-            ( { model | backgroundUploader = bModel }
+            ( { model
+                | backgroundUploader = bModel
+                , letterForm = newLetterForm
+              }
             , Effect.map BackgroundUploaderMsg (Effect.sendCmd bCmd)
             )
 

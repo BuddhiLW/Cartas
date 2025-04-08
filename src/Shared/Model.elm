@@ -1,6 +1,6 @@
 module Shared.Model exposing
     ( EventDate
-    , FileUpload
+    , FileUpload(..)
     , FileUploadModel
     , FileUploadType(..)
     , GraveyardName
