@@ -6,7 +6,7 @@ port module Effect exposing
     , pushRoutePath, replaceRoutePath
     , loadExternalUrl, back
     , map, toCmd
-    , clearUser, saveUser, signIn, signOut
+    , clearUser, downloadPdf, saveUser, signIn, signOut, storeFile
     )
 
 {-|
@@ -27,6 +27,7 @@ port module Effect exposing
 import Api.Role
 import Browser.Navigation
 import Dict exposing (Dict)
+import File
 import Json.Encode
 import Route exposing (Route)
 import Route.Path
@@ -287,3 +288,58 @@ clearUser =
         { key = "user"
         , value = Json.Encode.null
         }
+
+
+
+-- PDF PORTS
+
+
+port sendPdfRequest :
+    { url : String
+    , letterData : Json.Encode.Value
+    , files :
+        { photo : Maybe { name : String, mime : String } -- Just pass minimal file info
+        , background : Maybe { name : String, mime : String }
+        }
+    }
+    -> Cmd msg
+
+
+port receivePdfUrl : (String -> msg) -> Sub msg
+
+
+downloadPdf :
+    { url : String
+    , letterData : Json.Encode.Value
+    , files : { photo : Maybe File.File, background : Maybe File.File }
+    , onSuccess : String -> msg
+    }
+    -> Effect msg
+downloadPdf config =
+    SendCmd
+        (sendPdfRequest
+            { url = config.url
+            , letterData = config.letterData
+            , files =
+                { photo =
+                    Maybe.map
+                        (\f ->
+                            { name = File.name f
+                            , mime = File.mime f
+                            }
+                        )
+                        config.files.photo
+                , background =
+                    Maybe.map
+                        (\f ->
+                            { name = File.name f
+                            , mime = File.mime f
+                            }
+                        )
+                        config.files.background
+                }
+            }
+        )
+
+
+port storeFile : { name : String, file : Json.Encode.Value } -> Cmd msg

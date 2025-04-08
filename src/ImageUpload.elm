@@ -2,12 +2,14 @@ module ImageUpload exposing (Model, Msg, init, main, update, view)
 
 import Browser
 import Debug
+import Effect exposing (Effect, storeFile)
 import File exposing (File)
 import File.Select as Select
 import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick, preventDefaultOn)
 import Json.Decode as D
+import Json.Encode as E
 import Maybe exposing (withDefault)
 import Shared.Model exposing (FileUpload(..), FileUploadModel, FileUploadType(..))
 import Task
@@ -34,6 +36,7 @@ type alias Model =
     { hover : Bool
     , file : Maybe FileUpload -- This should match FileUploadModel
     , fileType : FileUploadType
+    , previews : List String
     }
 
 
@@ -42,6 +45,7 @@ init fileType _ =
     ( { hover = False
       , file = Nothing
       , fileType = fileType
+      , previews = []
       }
     , Cmd.none
     )
@@ -56,7 +60,10 @@ type Msg
     | DragEnter
     | DragLeave
     | GotFiles File (List File)
+    | GotPreviews (List String)
+    | RemoveFile
     | NoOp
+    | StoreFileUrl String String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -77,27 +84,41 @@ update msg model =
             , Cmd.none
             )
 
-        GotFiles firstFile remainingFiles ->
-            let
-                _ =
-                    Debug.log "GotFiles called with"
-                        { first = firstFile
-                        , rest = remainingFiles
-                        }
+        GotFiles first rest ->
+            ( { model
+                | file = Just (FileUpload model.fileType first)
+                , hover = False
+              }
+            , Cmd.batch
+                [ File.toUrl first
+                    |> Task.perform (List.singleton >> GotPreviews)
+                , Task.map2 Tuple.pair (Task.succeed (File.name first)) (File.toUrl first)
+                    |> Task.perform (\( name, url ) -> StoreFileUrl name url)
+                ]
+            )
 
-                newModel =
-                    { model
-                        | file = Just (FileUpload model.fileType firstFile)
-                        , hover = False
-                    }
+        GotPreviews urls ->
+            ( { model | previews = urls }, Cmd.none )
 
-                _ =
-                    Debug.log "Updated model" newModel
-            in
-            ( newModel, Cmd.none )
+        RemoveFile ->
+            ( { model
+                | file = Nothing
+                , previews = []
+                , hover = False
+              }
+            , Cmd.none
+            )
 
         NoOp ->
             ( model, Cmd.none )
+
+        StoreFileUrl name url ->
+            ( model
+            , Effect.storeFile
+                { name = name
+                , file = E.string url
+                }
+            )
 
 
 
@@ -119,8 +140,15 @@ view model =
         Nothing ->
             viewUpload model
 
-        Just (FileUpload _ file) ->
-            viewPreview (File.name file)
+        Just (FileUpload _ _) ->
+            -- Use the first preview URL from our list
+            case List.head model.previews of
+                Just url ->
+                    viewPreview url
+
+                Nothing ->
+                    -- Show loading state or fallback while waiting for preview
+                    viewPreview "loading..."
 
 
 viewUpload : Model -> Html Msg
@@ -148,8 +176,8 @@ viewUpload model =
         [ text "Clique ou arraste uma imagem aqui para fazer o upload" ]
 
 
-viewPreview : String -> Html msg
-viewPreview fileName =
+viewPreview : String -> Html Msg
+viewPreview url =
     div
         [ style "display" "flex"
         , style "flex-direction" "column"
@@ -159,14 +187,33 @@ viewPreview fileName =
         [ div
             [ style "width" "100px"
             , style "height" "100px"
-            , style "background" "#f0f0f0"
+            , style "background-size" "cover"
+            , style "background-position" "center"
             , style "border-radius" "4px"
-            , style "padding" "8px"
+            , style "border" "1px solid #ccc"
+            , style "background-image" ("url('" ++ url ++ "')")
             ]
-            [ text "Preview will show here" ]
-        , span
-            [ style "font-size" "0.8em" ]
-            [ text fileName ]
+            []
+        , div
+            [ style "display" "flex"
+            , style "gap" "8px"
+            ]
+            [ button
+                [ onClick Pick
+                , style "padding" "4px 8px"
+                , style "border-radius" "4px"
+                , style "border" "1px solid #ccc"
+                ]
+                [ text "Trocar" ]
+            , button
+                [ onClick RemoveFile
+                , style "padding" "4px 8px"
+                , style "border-radius" "4px"
+                , style "border" "1px solid #ccc"
+                , style "color" "#cc0000"
+                ]
+                [ text "Remover" ]
+            ]
         ]
 
 
@@ -193,7 +240,3 @@ isPhoto : File -> Bool
 isPhoto file =
     -- Implement logic to check the file type (e.g., by extension or MIME type)
     True
-
-
-
--- Placeholder logic, replace with actual implementation

@@ -53,6 +53,7 @@ type alias Model =
     , photoUploader : ImageUpload.Model
     , backgroundUploader : ImageUpload.Model
     , datePickerModel : Components.DatePicker.Model
+    , pdfUrl : Maybe String
     }
 
 
@@ -90,6 +91,7 @@ init () =
       , photoUploader = photoUploaderModel
       , backgroundUploader = backgroundUploaderModel
       , datePickerModel = datePickerModel
+      , pdfUrl = Nothing
       }
     , Effect.batch
         [ Effect.map PhotoUploaderMsg (Effect.sendCmd photoUploaderCmd)
@@ -109,6 +111,8 @@ type Msg
     | BackgroundUploaderMsg ImageUpload.Msg
     | LetterFieldInput LetterField String
     | DatePickerMsg Components.DatePicker.Msg
+    | GotPdfUrl String
+    | SubmitForm
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -195,6 +199,19 @@ update msg model =
             in
             ( { model | datePickerModel = uModel }
             , Effect.map DatePickerMsg (Effect.sendCmd uCmd)
+            )
+
+        GotPdfUrl url ->
+            ( { model
+                | isLoading = False
+                , pdfUrl = Just url
+              }
+            , Effect.none
+            )
+
+        SubmitForm ->
+            ( { model | isLoading = True }
+            , Effect.map GotPdfUrl (Api.Letter.post model.letterForm)
             )
 
 
@@ -299,7 +316,7 @@ viewLetterForm model =
             , Html.div [ Attr.class "control" ]
                 [ ImageUpload.view model.backgroundUploader |> Html.map BackgroundUploaderMsg ]
             ]
-        , viewLetterFormControls
+        , viewLetterFormControls model
         ]
 
 
@@ -319,12 +336,24 @@ viewLetterFormInput { field, value } =
         ]
 
 
-viewLetterFormControls : Html Msg
-viewLetterFormControls =
+viewLetterFormControls : Model -> Html Msg
+viewLetterFormControls model =
     Html.div [ Attr.class "field is-grouped is-grouped-right" ]
         [ Html.div [ Attr.class "control" ]
-            [ Html.button [ Attr.class "button is-link", Attr.type_ "submit" ]
-                [ Html.text "Submit Letter" ]
+            [ Html.button
+                [ Attr.class "button is-link is-large"
+                , Attr.type_ "button"
+                , Html.Events.onClick SubmitForm
+                , Attr.disabled model.isLoading
+                ]
+                [ Html.text
+                    (if model.isLoading then
+                        "Gerando..."
+
+                     else
+                        "Gerar Nota"
+                    )
+                ]
             ]
         ]
 
