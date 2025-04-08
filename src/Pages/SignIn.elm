@@ -121,16 +121,16 @@ update msg model =
                     , message =
                         case httpError of
                             Http.BadStatus 401 ->
-                                "Bad request. Please check your input."
+                                "Solicitação inválida. Por favor, verifique suas informações."
 
                             Http.BadStatus 404 ->
-                                "User not found. Please check your credentials."
+                                "Usuário não encontrado. Por favor, verifique suas credenciais."
 
                             Http.BadStatus 500 ->
-                                "Server error. Please try again later."
+                                "Erro no servidor. Por favor, tente novamente mais tarde."
 
                             _ ->
-                                "An unexpected error occurred."
+                                "Ocorreu um erro inesperado."
                     }
             in
             ( { model
@@ -156,7 +156,7 @@ subscriptions model =
 
 view : Model -> View Msg
 view model =
-    { title = "Sign in"
+    { title = "Entrar"
     , attributes = []
     , element =
         Element.html (viewPage model)
@@ -165,30 +165,42 @@ view model =
 
 viewPage : Model -> Html Msg
 viewPage model =
-    Html.div [ Attr.class "columns is-mobile is-centered" ]
-        [ Html.div [ Attr.class "column is-narrow" ]
-            [ Html.div [ Attr.class "section" ]
-                [ Html.h1 [ Attr.class "title" ] [ Html.text "Sign in" ]
-                , viewForm model
+    Html.div
+        [ Attr.class "is-flex is-justify-content-center is-align-items-center "
+        , Attr.style "min-height" "100vh"
+        , Attr.style "background" "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
+        ]
+        [ Html.div [ Attr.class "container" ]
+            [ Html.div
+                [ Attr.class "box mt-2 "
+                , Attr.style "max-width" "800px"
+                , Attr.style "margin" "0 auto"
+                , Attr.style "box-shadow" "0 4px 10px rgba(0, 0, 0, 0.1)"
+                ]
+                [ Html.div [ Attr.class "has-background-primary has-text-white p-4" ]
+                    [ Html.h1 [ Attr.class "title is-3 has-text-white" ] [ Html.text "Notas de Falecimento" ]
+                    , Html.p [ Attr.class "subtitle is-6 has-text-white" ] [ Html.text "Por favor, faça login para continuar" ]
+                    ]
+                , Html.div [ Attr.class "p-4" ]
+                    [ Html.form [ Attr.id "loginForm", Html.Events.onSubmit UserSubmittedForm ]
+                        [ viewFormInput
+                            { field = Email
+                            , value = model.email
+                            , error = findFieldError "email" model
+                            }
+                        , viewFormInput
+                            { field = Password
+                            , value = model.password
+                            , error = findFieldError "password" model
+                            }
+                        , viewFormControls model
+
+                        -- , Html.div [ Attr.class "has-text-centered mt-4" ]
+                        --     [ Html.a [ Attr.href "#", Attr.class "has-text-grey" ] [ Html.text "Esqueceu a senha?" ] ]
+                        ]
+                    ]
                 ]
             ]
-        ]
-
-
-viewForm : Model -> Html Msg
-viewForm model =
-    Html.form [ Attr.class "box", Html.Events.onSubmit UserSubmittedForm ]
-        [ viewFormInput
-            { field = Email
-            , value = model.email
-            , error = findFieldError "email" model
-            }
-        , viewFormInput
-            { field = Password
-            , value = model.password
-            , error = findFieldError "password" model
-            }
-        , viewFormControls model
         ]
 
 
@@ -199,25 +211,39 @@ viewFormInput :
     }
     -> Html Msg
 viewFormInput options =
-    Html.div [ Attr.class "field" ]
+    Html.div [ Attr.class "field mb-5" ]
         [ Html.label [ Attr.class "label" ] [ Html.text (fromFieldToLabel options.field) ]
-        , Html.div [ Attr.class "control" ]
+        , Html.div [ Attr.class "control has-icons-left" ]
             [ Html.input
                 [ Attr.class "input"
-                , Attr.classList
-                    [ ( "is-danger", options.error /= Nothing )
-                    ]
                 , Attr.type_ (fromFieldToInputType options.field)
+                , Attr.placeholder
+                    (if options.field == Email then
+                        "Digite seu e-mail"
+
+                     else
+                        "Digite sua senha"
+                    )
                 , Attr.value options.value
                 , Html.Events.onInput (UserUpdatedInput options.field)
                 ]
                 []
+            , Html.span [ Attr.class "icon is-small is-left" ]
+                [ Html.i
+                    [ Attr.class
+                        (if options.field == Email then
+                            "fas fa-envelope"
+
+                         else
+                            "fas fa-lock"
+                        )
+                    ]
+                    []
+                ]
             ]
         , case options.error of
             Just error ->
-                Html.p
-                    [ Attr.class "help is-danger" ]
-                    [ Html.text error.message ]
+                Html.p [ Attr.class "help is-danger" ] [ Html.text error.message ]
 
             Nothing ->
                 Html.text ""
@@ -228,10 +254,10 @@ fromFieldToLabel : Field -> String
 fromFieldToLabel field =
     case field of
         Email ->
-            "Email address"
+            "Endereço de e-mail"
 
         Password ->
-            "Password"
+            "Senha"
 
 
 fromFieldToInputType : Field -> String
@@ -247,15 +273,19 @@ fromFieldToInputType field =
 viewFormControls : Model -> Html Msg
 viewFormControls model =
     Html.div []
-        [ Html.div [ Attr.class "field is-grouped is-grouped-right" ]
-            [ Html.div
-                [ Attr.class "control" ]
+        [ Html.div [ Attr.class "field" ]
+            [ Html.div [ Attr.class "control" ]
                 [ Html.button
-                    [ Attr.class "button is-link"
+                    [ Attr.type_ "submit"
+                    , Attr.class "button is-primary is-fullwidth"
                     , Attr.disabled model.isSubmittingForm
-                    , Attr.classList [ ( "is-loading", model.isSubmittingForm ) ]
+                    , Attr.classList
+                        [ ( "is-loading", model.isSubmittingForm ) ]
                     ]
-                    [ Html.text "Sign in" ]
+                    [ Html.span [ Attr.class "icon" ]
+                        [ Html.i [ Attr.class "fas fa-sign-in-alt" ] [] ]
+                    , Html.span [] [ Html.text "Entrar" ]
+                    ]
                 ]
             ]
         , case findFormError model of

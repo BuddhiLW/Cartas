@@ -68,21 +68,21 @@ handleHttpResponse response =
     case response of
         Http.BadUrl_ _ ->
             Err
-                [ { message = "Unexpected URL format"
+                [ { message = "Formato de URL inesperado"
                   , field = Nothing
                   }
                 ]
 
         Http.Timeout_ ->
             Err
-                [ { message = "Request timed out, please try again"
+                [ { message = "A solicitação expirou, por favor tente novamente"
                   , field = Nothing
                   }
                 ]
 
         Http.NetworkError_ ->
             Err
-                [ { message = "Could not connect, please try again"
+                [ { message = "Não foi possível conectar, por favor tente novamente"
                   , field = Nothing
                   }
                 ]
@@ -91,21 +91,21 @@ handleHttpResponse response =
             case statusCode of
                 401 ->
                     Err
-                        [ { message = "Unauthorized: Invalid email or password."
+                        [ { message = "Não autorizado: E-mail ou senha inválidos."
                           , field = Nothing
                           }
                         ]
 
                 404 ->
                     Err
-                        [ { message = "Not Found: The requested resource could not be found."
+                        [ { message = "Não encontrado: O recurso solicitado não pôde ser encontrado."
                           , field = Nothing
                           }
                         ]
 
                 500 ->
                     Err
-                        [ { message = "Server Error: Please try again later."
+                        [ { message = "Erro do servidor: Por favor, tente novamente mais tarde."
                           , field = Nothing
                           }
                         ]
@@ -117,7 +117,7 @@ handleHttpResponse response =
 
                         Err _ ->
                             Err
-                                [ { message = "Something unexpected happened"
+                                [ { message = "Algo inesperado aconteceu"
                                   , field = Nothing
                                   }
                                 ]
@@ -129,7 +129,7 @@ handleHttpResponse response =
 
                 Err _ ->
                     Err
-                        [ { message = "Something unexpected happened"
+                        [ { message = "Algo inesperado aconteceu"
                           , field = Nothing
                           }
                         ]

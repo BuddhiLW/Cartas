@@ -133,12 +133,12 @@ viewAppNameAndLogo =
         [ Html.figure []
             [ Html.img
                 [ src "https://placehold.co/24x24"
-                , alt "My Cool App's logo"
+                , alt "App Funerária Francana"
                 ]
                 []
             ]
         , Html.span [ class "has-text-weight-bold pl-2" ]
-            [ Html.text "My Cool App" ]
+            [ Html.text "Funerária Francana" ]
         ]
 
 
