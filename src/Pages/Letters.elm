@@ -364,10 +364,19 @@ viewLetterForm model =
         , viewLetterFormInput { field = LetterName, value = model.letterForm.name }
         , viewLetterFormInput { field = LetterYearBirth, value = String.fromInt model.letterForm.yearBirth }
         , viewLetterFormInput { field = LetterYearDeath, value = String.fromInt model.letterForm.yearDeath }
-        , Html.div [ Attr.class "columns is-vcentered is-mobile" ]
-            [ Html.div [ Attr.class "column is-half" ]
+        , Html.div
+            [ Attr.class "columns is-vcentered is-mobile"
+            , Attr.style "z-index" "999"
+            ]
+            [ Html.div
+                [ Attr.class "column is-half"
+                , Attr.style "z-index" "999"
+                ]
                 [ Components.DatePicker.view model.datePickerModel |> Html.map DatePickerMsg ]
-            , Html.div [ Attr.class "column is-half" ]
+            , Html.div
+                [ Attr.class "column is-half"
+                , Attr.style "z-index" "999"
+                ]
                 [ viewTimeInput model
                 ]
             ]
