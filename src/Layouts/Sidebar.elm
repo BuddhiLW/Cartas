@@ -76,7 +76,7 @@ view :
     -> { toContentMsg : Msg -> contentMsg, content : View contentMsg, model : Model }
     -> View contentMsg
 view props route { toContentMsg, model, content } =
-    { title = content.title ++ " | My Cool App"
+    { title = content.title ++ " | Funerária Francana"
     , attributes = []
     , element =
         Element.row
@@ -160,11 +160,10 @@ viewSidebarLinks route =
     Html.div [ class "menu is-flex-grow-1" ]
         [ Html.ul [ class "menu-list" ]
             (List.map viewSidebarLink
-                [ ( "Dashboard", Route.Path.Home_ )
-
-                -- , ( "Settings", Route.Path.Settings )
-                -- , ( "Profile", Route.Path.Profile_Me )
-                , ( "Letters", Route.Path.Letters )
+                [ -- , ( "Dashboard", Route.Path.Home_ )
+                  -- , ( "Settings", Route.Path.Settings )
+                  -- , ( "Profile", Route.Path.Profile_Me )
+                  ( "Nota de Falecimento", Route.Path.Letters )
                 ]
             )
         ]
@@ -185,7 +184,7 @@ viewSignOutButton user =
                     ]
                     []
                 ]
-            , Html.span [ class "pl-2" ] [ Html.text "Sign out" ]
+            , Html.span [ class "pl-2 has-text-weight-bold has-text-danger" ] [ Html.text "Sair" ]
             ]
         ]
 

@@ -83,7 +83,7 @@ update route msg model =
             ( { model | user = Just user }
             , Effect.batch
                 [ Effect.pushRoute
-                    { path = Route.Path.Home_
+                    { path = Route.Path.Letters
                     , query = Dict.empty
                     , hash = Nothing
                     }

@@ -38,7 +38,7 @@ page user shared route =
 toLayout : Auth.User -> Model -> Layouts.Layout Msg
 toLayout user model =
     Layouts.Sidebar
-        { title = "Letters"
+        { title = "Formulário de Nota de Falecimento"
         , user = user
         }
 
@@ -365,7 +365,7 @@ view model =
 viewLetterForm : Model -> Html Msg
 viewLetterForm model =
     Html.form [ Attr.class "box is-centered is-fullwidth", Html.Events.onSubmit NoOp ]
-        [ Html.h2 [ Attr.class "title" ] [ Html.text "Formulário de Nota de Falecimento" ]
+        [ Html.h2 [ Attr.class "title" ] [ Html.text "Preencha todos os dados para gerar a nota de falecimento" ]
         , viewLetterFormInput { field = LetterName, value = model.letterForm.name }
         , viewLetterFormInput { field = LetterYearBirth, value = String.fromInt model.letterForm.yearBirth }
         , viewLetterFormInput { field = LetterYearDeath, value = String.fromInt model.letterForm.yearDeath }
@@ -378,7 +378,7 @@ viewLetterForm model =
             ]
         , viewLetterFormInput { field = LetterGraveyardName, value = model.letterForm.graveyardName }
         , Html.div [ Attr.class "field" ]
-            [ Html.label [ Attr.class "label" ] [ Html.text "Foto do Perfil (opcional)" ]
+            [ Html.label [ Attr.class "label" ] [ Html.text "Foto do Perfil" ]
             , Html.div [ Attr.class "control" ]
                 [ ImageUpload.view model.photoUploader |> Html.map PhotoUploaderMsg ]
             ]
