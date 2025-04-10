@@ -36,6 +36,8 @@ type alias Letter =
     , date : EventDate
     , graveyardName : GraveyardName
     , background : Maybe File
+    , hour : Int
+    , minute : Int
     }
 
 
@@ -51,7 +53,6 @@ type alias EventDate =
     { day : Int
     , month : Int
     , year : Int
-    , time : String
     }
 
 

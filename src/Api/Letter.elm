@@ -69,6 +69,8 @@ letterEncoder letter =
         , ( "year_death", Json.Encode.int letter.yearDeath )
         , ( "date", dateEncoder letter.date )
         , ( "graveyard_name", Json.Encode.string letter.graveyardName )
+        , ( "hour", Json.Encode.int letter.hour )
+        , ( "minute", Json.Encode.int letter.minute )
         ]
 
 
@@ -78,7 +80,6 @@ dateEncoder date =
         [ ( "day", Json.Encode.int date.day )
         , ( "month", Json.Encode.int date.month )
         , ( "year", Json.Encode.int date.year )
-        , ( "time", Json.Encode.string date.time )
         ]
 
 

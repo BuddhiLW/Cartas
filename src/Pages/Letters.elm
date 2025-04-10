@@ -16,6 +16,7 @@ import Page exposing (Page)
 import Route exposing (Route)
 import Shared exposing (..)
 import Shared.Model exposing (..)
+import Task
 import View exposing (View)
 
 
@@ -61,6 +62,19 @@ type alias Model =
 -- empty letter form
 
 
+type alias Letter =
+    { name : String
+    , photo : Maybe File
+    , yearBirth : Int
+    , yearDeath : Int
+    , date : EventDate
+    , graveyardName : String
+    , background : Maybe File
+    , hour : Int
+    , minute : Int
+    }
+
+
 emptyLetterForm : Letter
 emptyLetterForm =
     Letter
@@ -68,9 +82,15 @@ emptyLetterForm =
         Nothing
         0
         0
-        (EventDate 0 0 0 "")
+        (EventDate 0 0 0)
         ""
         Nothing
+        19
+        0
+
+
+
+-- Default minute
 
 
 init : () -> ( Model, Effect Msg )
@@ -110,8 +130,11 @@ type Msg
     | PhotoUploaderMsg ImageUpload.Msg
     | BackgroundUploaderMsg ImageUpload.Msg
     | LetterFieldInput LetterField String
+    | HourInput String
+    | MinuteInput String
     | DatePickerMsg Components.DatePicker.Msg
     | GotPdfUrl String
+    | DownloadPdf String
     | SubmitForm
 
 
@@ -192,12 +215,50 @@ update msg model =
         LetterFieldInput field inputStr ->
             letterFieldInputUpdate model field inputStr
 
+        HourInput inputStr ->
+            let
+                hour =
+                    String.toInt inputStr
+                        |> Maybe.withDefault model.letterForm.hour
+                        |> clamp 0 23
+            in
+            ( { model | letterForm = setHour hour model.letterForm }
+            , Effect.none
+            )
+
+        MinuteInput inputStr ->
+            let
+                minute =
+                    String.toInt inputStr
+                        |> Maybe.withDefault model.letterForm.minute
+                        |> clamp 0 59
+            in
+            ( { model | letterForm = setMinute minute model.letterForm }
+            , Effect.none
+            )
+
         DatePickerMsg subMsg ->
             let
                 ( uModel, uCmd ) =
                     Components.DatePicker.update subMsg model.datePickerModel
+
+                -- Extract date from picker model
+                newDate =
+                    case uModel.date of
+                        Just date ->
+                            let
+                                ( day, month, year ) =
+                                    parseDateFromPicker uModel.dateText
+                            in
+                            EventDate day month year
+
+                        Nothing ->
+                            model.letterForm.date
             in
-            ( { model | datePickerModel = uModel }
+            ( { model
+                | datePickerModel = uModel
+                , letterForm = setDate newDate model.letterForm
+              }
             , Effect.map DatePickerMsg (Effect.sendCmd uCmd)
             )
 
@@ -206,6 +267,11 @@ update msg model =
                 | isLoading = False
                 , pdfUrl = Just url
               }
+            , Effect.sendCmd (Task.perform identity (Task.succeed (DownloadPdf url)))
+            )
+
+        DownloadPdf url ->
+            ( { model | isLoading = False }
             , Effect.none
             )
 
@@ -281,7 +347,7 @@ letterFieldInputUpdate model field inputStr =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Effect.receivePdfUrl GotPdfUrl
 
 
 
@@ -303,8 +369,13 @@ viewLetterForm model =
         , viewLetterFormInput { field = LetterName, value = model.letterForm.name }
         , viewLetterFormInput { field = LetterYearBirth, value = String.fromInt model.letterForm.yearBirth }
         , viewLetterFormInput { field = LetterYearDeath, value = String.fromInt model.letterForm.yearDeath }
-        , Html.div [ Attr.style "position" "relative", Attr.style "z-index" "9999" ]
-            [ Components.DatePicker.view model.datePickerModel |> Html.map DatePickerMsg ]
+        , Html.div [ Attr.class "columns is-vcentered is-mobile" ]
+            [ Html.div [ Attr.class "column is-half" ]
+                [ Components.DatePicker.view model.datePickerModel |> Html.map DatePickerMsg ]
+            , Html.div [ Attr.class "column is-half" ]
+                [ viewTimeInput model
+                ]
+            ]
         , viewLetterFormInput { field = LetterGraveyardName, value = model.letterForm.graveyardName }
         , Html.div [ Attr.class "field" ]
             [ Html.label [ Attr.class "label" ] [ Html.text "Foto do Perfil (opcional)" ]
@@ -351,9 +422,47 @@ viewLetterFormControls model =
                         "Gerando..."
 
                      else
+                        --  (" ++ String.fromInt model.letterForm.hour ++ "h" ++ String.fromInt model.letterForm.minute ++ "m)"
                         "Gerar Nota"
                     )
                 ]
+            ]
+        ]
+
+
+viewTimeInput : Model -> Html Msg
+viewTimeInput model =
+    Html.div []
+        [ Html.label [ Attr.class "label" ] [ Html.text "Horário" ]
+        , Html.div [ Attr.class "field has-addons" ]
+            [ Html.div [ Attr.class "control" ]
+                [ Html.input
+                    [ Attr.class "input"
+                    , Attr.type_ "number"
+                    , Attr.placeholder "Hora"
+                    , Attr.value (String.fromInt model.letterForm.hour)
+                    , Html.Events.onInput HourInput
+                    , Attr.min "0"
+                    , Attr.max "23"
+                    ]
+                    []
+                ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.a [ Attr.class "button is-static" ] [ Html.text "h" ] ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.input
+                    [ Attr.class "input"
+                    , Attr.type_ "number"
+                    , Attr.placeholder "Minuto"
+                    , Attr.value (String.fromInt model.letterForm.minute)
+                    , Html.Events.onInput MinuteInput
+                    , Attr.min "0"
+                    , Attr.max "59"
+                    ]
+                    []
+                ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.a [ Attr.class "button is-static" ] [ Html.text "m" ] ]
             ]
         ]
 
@@ -411,11 +520,11 @@ formatDate eventDate =
 
 parseDate : String -> EventDate -> EventDate
 parseDate input defaultDate =
-    case String.split "-" input of
-        [ yearStr, monthStr, dayStr ] ->
+    case String.split "/" input of
+        [ dayStr, monthStr, yearStr ] ->
             case ( String.toInt yearStr, String.toInt monthStr, String.toInt dayStr ) of
                 ( Just y, Just m, Just d ) ->
-                    { defaultDate | year = y, month = m, day = d }
+                    { defaultDate | day = d, month = m, year = y }
 
                 _ ->
                     defaultDate
@@ -434,3 +543,31 @@ type LetterField
     | LetterYearDeath
     | LetterDate
     | LetterGraveyardName
+
+
+setHour : Int -> Letter -> Letter
+setHour hour letter =
+    { letter | hour = hour }
+
+
+setMinute : Int -> Letter -> Letter
+setMinute minute letter =
+    { letter | minute = minute }
+
+
+setDate : EventDate -> Letter -> Letter
+setDate date letter =
+    { letter | date = date }
+
+
+parseDateFromPicker : String -> ( Int, Int, Int )
+parseDateFromPicker dateText =
+    case String.split "/" dateText of
+        [ dayStr, monthStr, yearStr ] ->
+            ( Maybe.withDefault 0 (String.toInt dayStr)
+            , Maybe.withDefault 0 (String.toInt monthStr)
+            , Maybe.withDefault 0 (String.toInt yearStr)
+            )
+
+        _ ->
+            ( 0, 0, 0 )

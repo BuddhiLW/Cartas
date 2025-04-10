@@ -25,6 +25,7 @@ export const onReady = ({ env, app }) => {
   // PDF download handler
   if (app.ports && app.ports.sendPdfRequest) {
     app.ports.sendPdfRequest.subscribe(({ url, letterData, files }) => {
+      console.log("Sending PDF request:", letterData);
       fetch(url, {
         method: "POST",
         headers: {
@@ -46,15 +47,19 @@ export const onReady = ({ env, app }) => {
           if (app.ports.receivePdfUrl) {
             app.ports.receivePdfUrl.send(blobUrl);
           }
-
-          // Trigger download
           const a = document.createElement("a");
           a.href = blobUrl;
-          a.download = "nota-falecimento.pdf";
+          a.download = "carta.pdf";
           a.click();
 
           // Cleanup
           URL.revokeObjectURL(blobUrl);
+        })
+        .catch((error) => {
+          console.error("PDF generation failed:", error);
+          if (app.ports.receivePdfUrl) {
+            app.ports.receivePdfUrl.send("error");
+          }
         });
     });
   }

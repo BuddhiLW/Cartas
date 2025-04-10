@@ -6,7 +6,7 @@ port module Effect exposing
     , pushRoutePath, replaceRoutePath
     , loadExternalUrl, back
     , map, toCmd
-    , clearUser, downloadPdf, saveUser, signIn, signOut, storeFile
+    , clearUser, downloadPdf, receivePdfUrl, saveUser, signIn, signOut, storeFile
     )
 
 {-|
