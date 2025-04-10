@@ -17,7 +17,7 @@ import View exposing (View)
 page : Shared.Model -> Route () -> Page Model Msg
 page shared route =
     Page.new
-        { init = init
+        { init = init shared
         , update = update
         , subscriptions = subscriptions
         , view = view
@@ -33,15 +33,17 @@ type alias Model =
     , password : String
     , isSubmittingForm : Bool
     , errors : List Api.SignIn.Error
+    , shared : Shared.Model
     }
 
 
-init : () -> ( Model, Effect Msg )
-init () =
+init : Shared.Model -> () -> ( Model, Effect Msg )
+init shared () =
     ( { email = ""
       , password = ""
       , isSubmittingForm = False
       , errors = []
+      , shared = shared
       }
     , Effect.none
     )
@@ -82,6 +84,7 @@ update msg model =
                 { onResponse = SignInApiResponded
                 , email = model.email
                 , password = model.password
+                , baseUrl = model.shared.baseUrl
                 }
             )
 
@@ -93,6 +96,7 @@ update msg model =
             , Api.Me.get
                 { token = token
                 , onResponse = MeApiResponded token
+                , baseUrl = model.shared.baseUrl
                 }
             )
 

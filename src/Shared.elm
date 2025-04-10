@@ -27,12 +27,15 @@ import Shared.Msg
 
 
 type alias Flags =
-    { user : Maybe Shared.Model.User }
+    { serviceBaseUrl : String
+    , user : Maybe Shared.Model.User
+    }
 
 
 decoder : Json.Decode.Decoder Flags
 decoder =
-    Json.Decode.map Flags
+    Json.Decode.map2 Flags
+        (Json.Decode.field "serviceBaseUrl" Json.Decode.string)
         (Json.Decode.field "user" (Json.Decode.maybe userDecoder))
 
 
@@ -52,18 +55,27 @@ userDecoder =
 
 
 type alias Model =
-    Shared.Model.Model
+    { baseUrl : String
+    , user : Maybe Shared.Model.User
+    }
 
 
 init : Result Json.Decode.Error Flags -> Route () -> ( Model, Effect Msg )
-init flagsResult route =
+init flagsResult _ =
     let
-        flags : Flags
         flags =
-            flagsResult
-                |> Result.withDefault { user = Nothing }
+            case flagsResult of
+                Ok f ->
+                    f
+
+                Err _ ->
+                    { serviceBaseUrl = "http://localhost:8009"
+                    , user = Nothing
+                    }
     in
-    ( { user = flags.user }
+    ( { baseUrl = flags.serviceBaseUrl
+      , user = flags.user
+      }
     , Effect.none
     )
 

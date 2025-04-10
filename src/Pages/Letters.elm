@@ -3,7 +3,6 @@ module Pages.Letters exposing (Model, Msg, page)
 import Api.Letter
 import Auth
 import Components.DatePicker exposing (..)
-import Debug
 import Effect exposing (Effect)
 import Element exposing (..)
 import File exposing (File)
@@ -27,7 +26,7 @@ import View exposing (View)
 page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
 page user shared route =
     Page.new
-        { init = init
+        { init = init shared
         , update = update
         , subscriptions = subscriptions
         , view = view
@@ -55,6 +54,7 @@ type alias Model =
     , backgroundUploader : ImageUpload.Model
     , datePickerModel : Components.DatePicker.Model
     , pdfUrl : Maybe String
+    , shared : Shared.Model
     }
 
 
@@ -93,8 +93,8 @@ emptyLetterForm =
 -- Default minute
 
 
-init : () -> ( Model, Effect Msg )
-init () =
+init : Shared.Model -> () -> ( Model, Effect Msg )
+init shared () =
     let
         ( photoUploaderModel, photoUploaderCmd ) =
             ImageUpload.init Photo ()
@@ -112,6 +112,7 @@ init () =
       , backgroundUploader = backgroundUploaderModel
       , datePickerModel = datePickerModel
       , pdfUrl = Nothing
+      , shared = shared
       }
     , Effect.batch
         [ Effect.map PhotoUploaderMsg (Effect.sendCmd photoUploaderCmd)
@@ -146,28 +147,22 @@ update msg model =
 
         PhotoUploaderMsg subMsg ->
             let
-                _ =
-                    Debug.log "PhotoUploaderMsg" subMsg
-
+                --                 _ =
+                --                     Debug.log "PhotoUploaderMsg" subMsg
                 ( updatedUploader, uploaderCmd ) =
                     ImageUpload.update subMsg model.photoUploader
 
-                _ =
-                    Debug.log "Updated uploader state"
-                        { file = updatedUploader.file
-                        , type_ = updatedUploader.fileType
-                        }
-
+                --                 _ =
+                --                     Debug.log "Updated uploader state"
+                --                         { file = updatedUploader.file
+                --                         , type_ = updatedUploader.fileType
+                --                         }
                 lf =
                     model.letterForm
 
                 updatedLetterForm =
                     case updatedUploader.file of
                         Just (FileUpload _ file) ->
-                            let
-                                _ =
-                                    Debug.log "Updating letter with file" (File.name file)
-                            in
                             { lf | photo = Just file }
 
                         Nothing ->
@@ -179,11 +174,11 @@ update msg model =
                         , letterForm = updatedLetterForm
                     }
 
-                _ =
-                    Debug.log "Final model state"
-                        { photoUploaderFile = newModel.photoUploader.file
-                        , letterFormPhoto = newModel.letterForm.photo
-                        }
+                --                 _ =
+                --                     Debug.log "Final model state"
+                --                         { photoUploaderFile = newModel.photoUploader.file
+                --                         , letterFormPhoto = newModel.letterForm.photo
+                --                         }
             in
             ( newModel
             , Effect.map PhotoUploaderMsg (Effect.sendCmd uploaderCmd)
@@ -277,7 +272,7 @@ update msg model =
 
         SubmitForm ->
             ( { model | isLoading = True }
-            , Effect.map GotPdfUrl (Api.Letter.post model.letterForm)
+            , Effect.map GotPdfUrl (Api.Letter.post model.letterForm model.shared)
             )
 
 

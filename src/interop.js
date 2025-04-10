@@ -1,8 +1,13 @@
 let uploadedFiles = {}; // Store uploaded files
 
 export const flags = ({ env }) => {
+  console.log("env", env);
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  console.log("Sending flags:", { serviceBaseUrl: env.SERVICE_BASE_URL, user });
+  
   return {
-    accessToken: JSON.parse(window.localStorage.token || null),
+    serviceBaseUrl: env.SERVICE_BASE_URL,
+    user: user
   };
 };
 

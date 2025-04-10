@@ -37,10 +37,15 @@ post :
         -> msg
     , email : String
     , password : String
+    , baseUrl : String
     }
     -> Effect msg
 post options =
     let
+        url : String
+        url =
+            options.baseUrl ++ "/users/generate_token"
+
         body : Json.Encode.Value
         body =
             Json.Encode.object
@@ -51,7 +56,7 @@ post options =
         cmd : Cmd msg
         cmd =
             Http.post
-                { url = "http://localhost:8009/users/generate_token"
+                { url = url
                 , body = Http.jsonBody body
                 , expect =
                     -- Http.expectJson options.onResponse decoder

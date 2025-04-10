@@ -1,13 +1,12 @@
 module Api.Letter exposing (..)
 
--- import Shared exposing (..)
-
 import Effect exposing (Effect)
 import File
 import File.Download
 import Http
 import Json.Decode exposing (Decoder, andThen, field, map7, string)
 import Json.Encode exposing (Value, int, object, string)
+import Shared
 import Shared.Model
     exposing
         ( EventDate
@@ -100,10 +99,10 @@ fileEncoder maybeFile =
             Json.Encode.null
 
 
-post : Letter -> Effect String
-post letter =
+post : Letter -> Shared.Model -> Effect String
+post letter shared =
     Effect.downloadPdf
-        { url = "http://localhost:8009/cartas"
+        { url = shared.baseUrl ++ "/cartas"
         , letterData = letterEncoder letter
         , files =
             { photo = letter.photo

@@ -15,7 +15,9 @@ import File exposing (File)
 
 
 type alias Model =
-    { user : Maybe User }
+    { baseUrl : String
+    , user : Maybe User
+    }
 
 
 type alias User =

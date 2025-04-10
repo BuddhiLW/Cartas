@@ -1,7 +1,6 @@
 module ImageUpload exposing (Model, Msg, init, main, update, view)
 
 import Browser
-import Debug
 import Effect exposing (Effect, storeFile)
 import File exposing (File)
 import File.Select as Select

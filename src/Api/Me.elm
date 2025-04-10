@@ -32,13 +32,14 @@ userDecoder =
 get :
     { onResponse : Result Http.Error User -> msg
     , token : String
+    , baseUrl : String
     }
     -> Effect msg
 get options =
     let
         url : String
         url =
-            "http://localhost:8009/user/data"
+            options.baseUrl ++ "/user/data"
 
         headers : List Http.Header
         headers =
