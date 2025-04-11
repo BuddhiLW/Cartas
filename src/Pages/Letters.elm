@@ -72,6 +72,9 @@ type alias Letter =
     , background : Maybe File
     , hour : Int
     , minute : Int
+    , hourEnd : Int
+    , minuteEnd : Int
+    , wakeName : String
     }
 
 
@@ -87,6 +90,9 @@ emptyLetterForm =
         Nothing
         19
         0
+        24
+        30
+        ""
 
 
 
@@ -133,6 +139,9 @@ type Msg
     | LetterFieldInput LetterField String
     | HourInput String
     | MinuteInput String
+    | HourEndInput String
+    | MinuteEndInput String
+    | WakeNameInput String
     | DatePickerMsg Components.DatePicker.Msg
     | GotPdfUrl String
     | DownloadPdf String
@@ -229,6 +238,43 @@ update msg model =
                         |> clamp 0 59
             in
             ( { model | letterForm = setMinute minute model.letterForm }
+            , Effect.none
+            )
+
+        HourEndInput inputStr ->
+            let
+                lf =
+                    model.letterForm
+
+                newHourEnd =
+                    String.toInt inputStr
+                        |> Maybe.withDefault lf.hourEnd
+                        |> clamp 0 23
+            in
+            ( { model | letterForm = { lf | hourEnd = newHourEnd } }
+            , Effect.none
+            )
+
+        MinuteEndInput inputStr ->
+            let
+                lf =
+                    model.letterForm
+
+                minuteEnd =
+                    String.toInt inputStr
+                        |> Maybe.withDefault model.letterForm.minuteEnd
+                        |> clamp 0 59
+            in
+            ( { model | letterForm = { lf | minuteEnd = minuteEnd } }
+            , Effect.none
+            )
+
+        WakeNameInput inputStr ->
+            let
+                lf =
+                    model.letterForm
+            in
+            ( { model | letterForm = { lf | wakeName = inputStr } }
             , Effect.none
             )
 
@@ -369,17 +415,22 @@ viewLetterForm model =
             , Attr.style "z-index" "999"
             ]
             [ Html.div
-                [ Attr.class "column is-half"
+                [ Attr.class "column is-one-third"
                 , Attr.style "z-index" "999"
                 ]
                 [ Components.DatePicker.view model.datePickerModel |> Html.map DatePickerMsg ]
             , Html.div
-                [ Attr.class "column is-half"
+                [ Attr.class "column is-one-third"
                 , Attr.style "z-index" "999"
                 ]
-                [ viewTimeInput model
+                [ viewTimeInput model ]
+            , Html.div
+                [ Attr.class "column is-one-third"
+                , Attr.style "z-index" "999"
                 ]
+                [ viewTimeEndInput model ]
             ]
+        , viewWakeNameInput model
         , viewLetterFormInput { field = LetterGraveyardName, value = model.letterForm.graveyardName }
         , Html.div [ Attr.class "field" ]
             [ Html.label [ Attr.class "label" ] [ Html.text "Foto do Perfil" ]
@@ -467,6 +518,59 @@ viewTimeInput model =
                 ]
             , Html.div [ Attr.class "control" ]
                 [ Html.a [ Attr.class "button is-static" ] [ Html.text "m" ] ]
+            ]
+        ]
+
+
+viewTimeEndInput : Model -> Html Msg
+viewTimeEndInput model =
+    Html.div []
+        [ Html.label [ Attr.class "label" ] [ Html.text "Horário Fim" ]
+        , Html.div [ Attr.class "field has-addons" ]
+            [ Html.div [ Attr.class "control" ]
+                [ Html.input
+                    [ Attr.class "input"
+                    , Attr.type_ "number"
+                    , Attr.placeholder "Hora fim"
+                    , Attr.value (String.fromInt model.letterForm.hourEnd)
+                    , Html.Events.onInput HourEndInput
+                    , Attr.min "0"
+                    , Attr.max "23"
+                    ]
+                    []
+                ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.a [ Attr.class "button is-static" ] [ Html.text "h" ] ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.input
+                    [ Attr.class "input"
+                    , Attr.type_ "number"
+                    , Attr.placeholder "Minuto fim"
+                    , Attr.value (String.fromInt model.letterForm.minuteEnd)
+                    , Html.Events.onInput MinuteEndInput
+                    , Attr.min "0"
+                    , Attr.max "59"
+                    ]
+                    []
+                ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.a [ Attr.class "button is-static" ] [ Html.text "m" ] ]
+            ]
+        ]
+
+
+viewWakeNameInput : Model -> Html Msg
+viewWakeNameInput model =
+    Html.div [ Attr.class "field" ]
+        [ Html.label [ Attr.class "label" ] [ Html.text "Nome do Velório" ]
+        , Html.div [ Attr.class "control" ]
+            [ Html.input
+                [ Attr.class "input"
+                , Attr.type_ "text"
+                , Attr.value model.letterForm.wakeName
+                , Html.Events.onInput WakeNameInput
+                ]
+                []
             ]
         ]
 

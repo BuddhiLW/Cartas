@@ -70,6 +70,9 @@ letterEncoder letter =
         , ( "graveyard_name", Json.Encode.string letter.graveyardName )
         , ( "hour", Json.Encode.int letter.hour )
         , ( "minute", Json.Encode.int letter.minute )
+        , ( "hour_end", Json.Encode.int letter.hourEnd )
+        , ( "minute_end", Json.Encode.int letter.minuteEnd )
+        , ( "wake_name", Json.Encode.string letter.wakeName )
         ]
 
 

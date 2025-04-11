@@ -37,9 +37,12 @@ type alias Letter =
     , yearDeath : YearDeath
     , date : EventDate
     , graveyardName : GraveyardName
+    , wakeName : WakeName
     , background : Maybe File
     , hour : Int
     , minute : Int
+    , hourEnd : Int
+    , minuteEnd : Int
     }
 
 
@@ -59,6 +62,10 @@ type alias EventDate =
 
 
 type alias GraveyardName =
+    String
+
+
+type alias WakeName =
     String
 
 
