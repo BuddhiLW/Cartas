@@ -1,4 +1,4 @@
-module Pages.SignIn_ exposing (Model, Msg, page, subscriptions, update, view)
+module Pages.SignIn exposing (Model, Msg, page, subscriptions, update, view)
 
 import Api.Me
 import Api.SignIn
@@ -14,7 +14,7 @@ import Shared
 import View exposing (View)
 
 
-page : Shared.Model -> Route { signIn : String } -> Page Model Msg
+page : Shared.Model -> Route () -> Page Model Msg
 page shared _ =
     Page.new
         { init = init { shared = shared }

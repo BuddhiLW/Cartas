@@ -22,7 +22,7 @@ onPageLoad shared _ =
             Auth.Action.loadPageWithUser user
 
         Nothing ->
-            Auth.Action.pushRoute
+            Auth.Action.PushRoute
                 { path = Route.Path.SignIn
                 , query = Dict.empty
                 , hash = Nothing
