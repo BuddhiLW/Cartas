@@ -7,7 +7,7 @@
     "env": ["SERVICE_BASE_URL"],
     "html": {
       "attributes": {
-        "html": { "lang": "en" },
+        "html": { "lang": "pt-BR" },
         "head": {}
       },
       "title": "Funerária Francana: Notas de Falescimento",
@@ -17,7 +17,8 @@
         {
           "name": "viewport",
           "content": "width=device-width, initial-scale=1.0"
-        }
+        },
+        { "rel": "icon", "href": "/assets/logo.png", "type": "image/png" }
       ],
       "link": [
         { "rel": "icon", "href": "/assets/logo.png", "type": "image/png" },

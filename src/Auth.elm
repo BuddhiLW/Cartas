@@ -16,11 +16,7 @@ type alias User =
 {-| Called before an auth-only page is loaded.
 -}
 onPageLoad : Shared.Model -> Route () -> Auth.Action.Action User
-onPageLoad shared route =
-    -- case shared.token of
-    --     Just accessToken ->
-    --         Auth.Action.loadPageWithUser
-    --             { accessToken = accessToken }
+onPageLoad shared _ =
     case shared.user of
         Just user ->
             Auth.Action.loadPageWithUser user
@@ -28,10 +24,7 @@ onPageLoad shared route =
         Nothing ->
             Auth.Action.pushRoute
                 { path = Route.Path.SignIn
-                , query =
-                    Dict.fromList
-                        [ ( "from", route.url.path )
-                        ]
+                , query = Dict.empty
                 , hash = Nothing
                 }
 
