@@ -1,4 +1,4 @@
-module Pages.SignIn exposing (Model, Msg, page)
+module Pages.SignIn exposing (Model, Msg, init, page, subscriptions, update, view)
 
 import Api.Me
 import Api.SignIn
@@ -39,7 +39,7 @@ type alias Model =
 
 init : Shared.Model -> () -> ( Model, Effect Msg )
 init shared () =
-    ( { email = ""
+    ( { email = "funerariafrancana@yahoo.com.br"
       , password = ""
       , isSubmittingForm = False
       , errors = []
