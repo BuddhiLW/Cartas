@@ -20,14 +20,14 @@
         },
         {
           "rel": "icon",
-          "href": "/src/assets/logo.png",
+          "href": "/assets/logo.png",
           "type": "image/x-icon"
         }
       ],
       "link": [
         {
           "rel": "icon",
-          "href": "/src/assets/logo.png",
+          "href": "/assets/logo.png",
           "type": "image/x-icon"
         },
         {
