@@ -8,11 +8,19 @@
     "html": {
       "attributes": {
         "html": { "lang": "pt-BR" },
-        "head": {}
-      },
-      "title": "Funerária Francana: Notas de Falescimento",
-      "meta": [
-        { "charset": "UTF-8" },
+        "base": { "href": "/" },
+        "head": {
+          "link": [
+            {
+              "rel": "icon",
+              "href": "/assets/logo.png",
+              "type": "image/x-icon"
+            }
+          ]
+        },
+        "title": "Funerária Francana: Notas de Falescimento",
+        "meta": [
+          { "charset": "UTF-8" },
         { "http-equiv": "X-UA-Compatible", "content": "IE=edge" },
         {
           "name": "viewport",
@@ -20,14 +28,14 @@
         },
         {
           "rel": "icon",
-          "href": "/dist/assets/logo.png",
+          "href": "/assets/logo.png",
           "type": "image/x-icon"
         }
       ],
       "link": [
         {
           "rel": "icon",
-          "href": "/dist/assets/logo.png",
+          "href": "/assets/logo.png",
           "type": "image/x-icon"
         },
         {
