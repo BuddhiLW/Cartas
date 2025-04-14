@@ -16,20 +16,33 @@
               "href": "/assets/logo.png",
               "type": "image/x-icon"
             }
+          ],
+          "title": "Funerária Francana: Notas de Falescimento",
+          "meta": [
+            { "charset": "UTF-8" },
+            { "http-equiv": "X-UA-Compatible", "content": "IE=edge" },
+            {
+              "name": "viewport",
+              "content": "width=device-width, initial-scale=1.0"
+            },
+            {
+              "name": "description",
+              "content": "Funerária Francana: Notas de Falescimento"
+            }
           ]
-        },
-        "title": "Funerária Francana: Notas de Falescimento",
-        "meta": [
-          { "charset": "UTF-8" },
+        }
+      },
+      "title": "Funerária Francana: Notas de Falescimento",
+      "meta": [
+        { "charset": "UTF-8" },
         { "http-equiv": "X-UA-Compatible", "content": "IE=edge" },
         {
           "name": "viewport",
           "content": "width=device-width, initial-scale=1.0"
         },
         {
-          "rel": "icon",
-          "href": "/assets/logo.png",
-          "type": "image/x-icon"
+          "name": "description",
+          "content": "Funerária Francana: Notas de Falescimento"
         }
       ],
       "link": [
