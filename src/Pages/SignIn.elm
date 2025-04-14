@@ -181,9 +181,12 @@ viewPage model =
                 , Attr.style "margin" "0 auto"
                 , Attr.style "box-shadow" "0 4px 10px rgba(0, 0, 0, 0.1)"
                 ]
-                [ Html.div [ Attr.class "has-background-primary has-text-white p-4" ]
-                    [ Html.h1 [ Attr.class "title is-3 has-text-white" ] [ Html.text "Notas de Falecimento" ]
-                    , Html.p [ Attr.class "subtitle is-6 has-text-white" ] [ Html.text "Por favor, faça login para continuar" ]
+                [ Html.div [ Attr.class "has-background-primary has-text-white p-4 " ]
+                    [ Html.div [ Attr.class "is-flex is-align-items-center is-justify-content-center" ]
+                        [ Html.img [ Attr.src "/assets/logo.png", Attr.style "width" "100px" ] []
+                        , Html.h1 [ Attr.class "title is-3 has-text-white" ] [ Html.text "Notas de Falecimento" ]
+                        ]
+                    , Html.p [ Attr.class "subtitle is-6 has-text-white has-text-centered" ] [ Html.text "Por favor, faça login para continuar" ]
                     ]
                 , Html.div [ Attr.class "p-4" ]
                     [ Html.form [ Attr.id "loginForm", Html.Events.onSubmit UserSubmittedForm ]
