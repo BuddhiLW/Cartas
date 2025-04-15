@@ -457,12 +457,36 @@ viewLetterForm model =
         , Html.div [ Attr.class "field" ]
             [ Html.label [ Attr.class "label" ] [ Html.text "Foto do Perfil" ]
             , Html.div [ Attr.class "control" ]
-                [ ImageUpload.view model.photoUploader |> Html.map PhotoUploaderMsg ]
+                [ case model.photoUploader.file of
+                    Just (FileUpload _ file) ->
+                        ImageUpload.view model.photoUploader |> Html.map PhotoUploaderMsg
+
+                    Nothing ->
+                        Html.div [ Attr.class "flex flex-row" ]
+                            [ ImageUpload.view model.photoUploader |> Html.map PhotoUploaderMsg
+                            , Html.div [ Attr.class "flex flex-row" ]
+                                [ Html.p [ Attr.class "is-size-12 mt-3" ] [ Html.text "Caso não selecione uma foto, esta sairá padrão:" ]
+                                , Html.img [ Attr.class "image is-64x64", Attr.src "/static/assets/luto.png", Attr.alt "Default Profile" ] []
+                                ]
+                            ]
+                ]
             ]
         , Html.div [ Attr.class "field" ]
             [ Html.label [ Attr.class "label" ] [ Html.text "Imagem de Fundo da Nota" ]
             , Html.div [ Attr.class "control" ]
-                [ ImageUpload.view model.backgroundUploader |> Html.map BackgroundUploaderMsg ]
+                [ case model.backgroundUploader.file of
+                    Just (FileUpload _ file) ->
+                        ImageUpload.view model.backgroundUploader |> Html.map BackgroundUploaderMsg
+
+                    Nothing ->
+                        Html.div [ Attr.class "flex is-flex-row" ]
+                            [ ImageUpload.view model.backgroundUploader |> Html.map BackgroundUploaderMsg
+                            , Html.div [ Attr.class "flex flex-row" ]
+                                [ Html.p [ Attr.class "is-size-12 mt-3" ] [ Html.text "Caso não selecione uma imagem de fundo, esta sairá padrão:" ]
+                                , Html.img [ Attr.class "image is-64x64", Attr.src "/static/assets/fundo2.png", Attr.alt "Default Background" ] []
+                                ]
+                            ]
+                ]
             ]
         , viewLetterFormControls model
         ]
