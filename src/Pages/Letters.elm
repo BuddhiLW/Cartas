@@ -220,54 +220,76 @@ update msg model =
             letterFieldInputUpdate model field inputStr
 
         HourInput inputStr ->
-            let
-                hour =
-                    String.toInt inputStr
-                        |> Maybe.withDefault model.letterForm.hour
-                        |> clamp 0 23
-            in
-            ( { model | letterForm = setHour hour model.letterForm }
-            , Effect.none
-            )
+            if inputStr == "" then
+                ( { model | letterForm = setHour -1 model.letterForm }
+                , Effect.none
+                )
+
+            else
+                case String.toInt inputStr of
+                    Just n ->
+                        ( { model | letterForm = setHour (clamp 0 23 n) model.letterForm }
+                        , Effect.none
+                        )
+
+                    Nothing ->
+                        ( model, Effect.none )
 
         MinuteInput inputStr ->
-            let
-                minute =
-                    String.toInt inputStr
-                        |> Maybe.withDefault model.letterForm.minute
-                        |> clamp 0 59
-            in
-            ( { model | letterForm = setMinute minute model.letterForm }
-            , Effect.none
-            )
+            if inputStr == "" then
+                ( { model | letterForm = setMinute -1 model.letterForm }
+                , Effect.none
+                )
+
+            else
+                case String.toInt inputStr of
+                    Just n ->
+                        ( { model | letterForm = setMinute (clamp 0 59 n) model.letterForm }
+                        , Effect.none
+                        )
+
+                    Nothing ->
+                        ( model, Effect.none )
 
         HourEndInput inputStr ->
             let
                 lf =
                     model.letterForm
-
-                newHourEnd =
-                    String.toInt inputStr
-                        |> Maybe.withDefault lf.hourEnd
-                        |> clamp 0 23
             in
-            ( { model | letterForm = { lf | hourEnd = newHourEnd } }
-            , Effect.none
-            )
+            if inputStr == "" then
+                ( { model | letterForm = { lf | hourEnd = -1 } }
+                , Effect.none
+                )
+
+            else
+                case String.toInt inputStr of
+                    Just n ->
+                        ( { model | letterForm = { lf | hourEnd = clamp 0 23 n } }
+                        , Effect.none
+                        )
+
+                    Nothing ->
+                        ( model, Effect.none )
 
         MinuteEndInput inputStr ->
             let
                 lf =
                     model.letterForm
-
-                minuteEnd =
-                    String.toInt inputStr
-                        |> Maybe.withDefault model.letterForm.minuteEnd
-                        |> clamp 0 59
             in
-            ( { model | letterForm = { lf | minuteEnd = minuteEnd } }
-            , Effect.none
-            )
+            if inputStr == "" then
+                ( { model | letterForm = { lf | minuteEnd = -1 } }
+                , Effect.none
+                )
+
+            else
+                case String.toInt inputStr of
+                    Just n ->
+                        ( { model | letterForm = { lf | minuteEnd = clamp 0 59 n } }
+                        , Effect.none
+                        )
+
+                    Nothing ->
+                        ( model, Effect.none )
 
         WakeNameInput inputStr ->
             let
@@ -495,7 +517,13 @@ viewTimeInput model =
                     [ Attr.class "input"
                     , Attr.type_ "number"
                     , Attr.placeholder "Hora"
-                    , Attr.value (String.fromInt model.letterForm.hour)
+                    , Attr.value
+                        (if model.letterForm.hour == -1 then
+                            ""
+
+                         else
+                            String.fromInt model.letterForm.hour
+                        )
                     , Html.Events.onInput HourInput
                     , Attr.min "0"
                     , Attr.max "23"
@@ -509,7 +537,13 @@ viewTimeInput model =
                     [ Attr.class "input"
                     , Attr.type_ "number"
                     , Attr.placeholder "Minuto"
-                    , Attr.value (String.fromInt model.letterForm.minute)
+                    , Attr.value
+                        (if model.letterForm.minute == -1 then
+                            ""
+
+                         else
+                            String.fromInt model.letterForm.minute
+                        )
                     , Html.Events.onInput MinuteInput
                     , Attr.min "0"
                     , Attr.max "59"
@@ -532,7 +566,13 @@ viewTimeEndInput model =
                     [ Attr.class "input"
                     , Attr.type_ "number"
                     , Attr.placeholder "Hora fim"
-                    , Attr.value (String.fromInt model.letterForm.hourEnd)
+                    , Attr.value
+                        (if model.letterForm.hourEnd == -1 then
+                            ""
+
+                         else
+                            String.fromInt model.letterForm.hourEnd
+                        )
                     , Html.Events.onInput HourEndInput
                     , Attr.min "0"
                     , Attr.max "23"
@@ -546,7 +586,13 @@ viewTimeEndInput model =
                     [ Attr.class "input"
                     , Attr.type_ "number"
                     , Attr.placeholder "Minuto fim"
-                    , Attr.value (String.fromInt model.letterForm.minuteEnd)
+                    , Attr.value
+                        (if model.letterForm.minuteEnd == -1 then
+                            ""
+
+                         else
+                            String.fromInt model.letterForm.minuteEnd
+                        )
                     , Html.Events.onInput MinuteEndInput
                     , Attr.min "0"
                     , Attr.max "59"
