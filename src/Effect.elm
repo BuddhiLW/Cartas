@@ -6,7 +6,7 @@ port module Effect exposing
     , pushRoutePath, replaceRoutePath
     , loadExternalUrl, back
     , map, toCmd
-    , clearUser, downloadPdf, receivePdfUrl, saveUser, signIn, signOut, storeFile
+    , clearUser, downloadImage, downloadPdf, receiveImageUrl, receivePdfUrl, saveUser, signIn, signOut, storeFile
     )
 
 {-|
@@ -340,6 +340,21 @@ downloadPdf config =
                 }
             }
         )
+
+
+port receiveImageUrl : (String -> msg) -> Sub msg
+
+
+port downloadImagePort : { url : String } -> Cmd msg
+
+
+downloadImage :
+    { url : String
+    , onSuccess : String -> msg
+    }
+    -> Effect msg
+downloadImage config =
+    SendCmd (downloadImagePort { url = config.url })
 
 
 port storeFile : { name : String, file : Json.Encode.Value } -> Cmd msg

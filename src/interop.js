@@ -57,11 +57,6 @@ export const onReady = ({ env, app }) => {
           a.download = "carta.pdf";
           a.click();
 
-          const a2 = document.createElement("a");
-          a2.href = blobUrl;
-          a2.download = "carta.jpeg";
-          a2.click();
-
           // Cleanup
           URL.revokeObjectURL(blobUrl);
         })
@@ -70,6 +65,36 @@ export const onReady = ({ env, app }) => {
           if (app.ports.receivePdfUrl) {
             app.ports.receivePdfUrl.send("error");
           }
+        });
+    });
+  }
+  if (app.ports && app.ports.downloadImagePort) {
+    app.ports.downloadImagePort.subscribe(({ url }) => {
+      fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "image/jpeg",
+        },
+      })
+        .then((res) => res.blob())
+        .then((blob) => {
+          const blobUrl = URL.createObjectURL(blob);
+
+          // Send URL back to Elm if needed
+          if (app.ports.receiveImageUrl) {
+            app.ports.receiveImageUrl.send(blobUrl);
+          }
+
+          const a = document.createElement("a");
+          a.href = blobUrl;
+          a.download = "carta.jpeg";
+          a.click();
+
+          // Cleanup if needed
+          // URL.revokeObjectURL(blobUrl);
+        })
+        .catch((error) => {
+          console.error("Image download failed:", error);
         });
     });
   }

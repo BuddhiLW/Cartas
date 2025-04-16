@@ -119,3 +119,11 @@ post letter shared =
             }
         , onSuccess = identity
         }
+
+
+download : String -> Shared.Model -> Effect String
+download format shared =
+    Effect.downloadImage
+        { url = shared.baseUrl ++ "/cartas/" ++ format
+        , onSuccess = identity
+        }

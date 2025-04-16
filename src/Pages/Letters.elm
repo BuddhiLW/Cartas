@@ -162,6 +162,7 @@ type Msg
     | WakeNameInput String
     | DatePickerMsg Components.DatePicker.Msg
     | GotPdfUrl String
+    | GotImageUrl String
     | DownloadPdf String
     | SubmitForm
     | TwoDaysInput Bool
@@ -354,8 +355,14 @@ update msg model =
                 | isLoading = False
                 , pdfUrl = Just url
               }
-            , Effect.sendCmd (Task.perform identity (Task.succeed (DownloadPdf url)))
+            , Effect.batch
+                [ Effect.sendCmd (Task.perform identity (Task.succeed (DownloadPdf url)))
+                , Api.Letter.download "jpeg" model.shared |> Effect.map GotImageUrl
+                ]
             )
+
+        GotImageUrl imgUrl ->
+            ( model, Effect.none )
 
         DownloadPdf url ->
             ( { model | isLoading = False }
