@@ -73,6 +73,12 @@ letterEncoder letter =
         , ( "hour_end", Json.Encode.int letter.hourEnd )
         , ( "minute_end", Json.Encode.int letter.minuteEnd )
         , ( "wake_name", Json.Encode.string letter.wakeName )
+        , ( "two_days", Json.Encode.bool letter.twoDays )
+        , ( "second_date", dateEncoder letter.secondDate )
+        , ( "second_hour", Json.Encode.int letter.secondHour )
+        , ( "second_minute", Json.Encode.int letter.secondMinute )
+        , ( "second_hour_end", Json.Encode.int letter.secondHourEnd )
+        , ( "second_minute_end", Json.Encode.int letter.secondMinuteEnd )
         ]
 
 

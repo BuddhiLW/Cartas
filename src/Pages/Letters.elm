@@ -53,6 +53,7 @@ type alias Model =
     , photoUploader : ImageUpload.Model
     , backgroundUploader : ImageUpload.Model
     , datePickerModel : Components.DatePicker.Model
+    , secondDatePickerModel : Components.DatePicker.Model
     , pdfUrl : Maybe String
     , shared : Shared.Model
     }
@@ -75,6 +76,12 @@ type alias Letter =
     , hourEnd : Int
     , minuteEnd : Int
     , wakeName : String
+    , twoDays : Bool
+    , secondDate : EventDate
+    , secondHour : Int
+    , secondMinute : Int
+    , secondHourEnd : Int
+    , secondMinuteEnd : Int
     }
 
 
@@ -90,9 +97,15 @@ emptyLetterForm =
         Nothing
         19
         0
-        24
-        30
+        23
+        59
         ""
+        False
+        (EventDate 0 0 0)
+        -1
+        -1
+        -1
+        -1
 
 
 
@@ -110,6 +123,9 @@ init shared () =
 
         ( datePickerModel, datePickerCmd ) =
             Components.DatePicker.init
+
+        ( secondDatePickerModel, secondDatePickerCmd ) =
+            Components.DatePicker.init
     in
     ( { letterForm = emptyLetterForm
       , isLoading = False
@@ -119,11 +135,13 @@ init shared () =
       , datePickerModel = datePickerModel
       , pdfUrl = Nothing
       , shared = shared
+      , secondDatePickerModel = secondDatePickerModel
       }
     , Effect.batch
         [ Effect.map PhotoUploaderMsg (Effect.sendCmd photoUploaderCmd)
         , Effect.map BackgroundUploaderMsg (Effect.sendCmd backgroundUploaderCmd)
         , Effect.map DatePickerMsg (Effect.sendCmd datePickerCmd)
+        , Effect.map SecondDatePickerMsg (Effect.sendCmd secondDatePickerCmd)
         ]
     )
 
@@ -146,6 +164,12 @@ type Msg
     | GotPdfUrl String
     | DownloadPdf String
     | SubmitForm
+    | TwoDaysInput Bool
+    | SecondDatePickerMsg Components.DatePicker.Msg
+    | SecondHourInput String
+    | SecondMinuteInput String
+    | SecondHourEndInput String
+    | SecondMinuteEndInput String
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -343,6 +367,124 @@ update msg model =
             , Effect.map GotPdfUrl (Api.Letter.post model.letterForm model.shared)
             )
 
+        TwoDaysInput isChecked ->
+            let
+                lf =
+                    model.letterForm
+            in
+            ( { model
+                | letterForm = { lf | twoDays = isChecked }
+              }
+            , Effect.none
+            )
+
+        SecondDatePickerMsg subMsg ->
+            let
+                ( updatedDPModel, dpCmd ) =
+                    Components.DatePicker.update subMsg model.secondDatePickerModel
+
+                newSecondDate =
+                    case updatedDPModel.date of
+                        Just _ ->
+                            let
+                                ( day, month, year ) =
+                                    parseDateFromPicker updatedDPModel.dateText
+                            in
+                            EventDate day month year
+
+                        Nothing ->
+                            model.letterForm.secondDate
+
+                lf =
+                    model.letterForm
+            in
+            ( { model
+                | secondDatePickerModel = updatedDPModel
+                , letterForm = { lf | secondDate = newSecondDate }
+              }
+            , Effect.map SecondDatePickerMsg (Effect.sendCmd dpCmd)
+            )
+
+        SecondHourInput inputStr ->
+            let
+                lf =
+                    model.letterForm
+            in
+            if inputStr == "" then
+                ( { model | letterForm = { lf | secondHour = -1 } }
+                , Effect.none
+                )
+
+            else
+                case String.toInt inputStr of
+                    Just n ->
+                        ( { model | letterForm = { lf | secondHour = clamp 0 23 n } }
+                        , Effect.none
+                        )
+
+                    Nothing ->
+                        ( model, Effect.none )
+
+        SecondMinuteInput inputStr ->
+            let
+                lf =
+                    model.letterForm
+            in
+            if inputStr == "" then
+                ( { model | letterForm = { lf | secondMinute = -1 } }
+                , Effect.none
+                )
+
+            else
+                case String.toInt inputStr of
+                    Just n ->
+                        ( { model | letterForm = { lf | secondMinute = clamp 0 59 n } }
+                        , Effect.none
+                        )
+
+                    Nothing ->
+                        ( model, Effect.none )
+
+        SecondHourEndInput inputStr ->
+            let
+                lf =
+                    model.letterForm
+            in
+            if inputStr == "" then
+                ( { model | letterForm = { lf | secondHourEnd = -1 } }
+                , Effect.none
+                )
+
+            else
+                case String.toInt inputStr of
+                    Just n ->
+                        ( { model | letterForm = { lf | secondHourEnd = clamp 0 23 n } }
+                        , Effect.none
+                        )
+
+                    Nothing ->
+                        ( model, Effect.none )
+
+        SecondMinuteEndInput inputStr ->
+            let
+                lf =
+                    model.letterForm
+            in
+            if inputStr == "" then
+                ( { model | letterForm = { lf | secondMinuteEnd = -1 } }
+                , Effect.none
+                )
+
+            else
+                case String.toInt inputStr of
+                    Just n ->
+                        ( { model | letterForm = { lf | secondMinuteEnd = clamp 0 59 n } }
+                        , Effect.none
+                        )
+
+                    Nothing ->
+                        ( model, Effect.none )
+
 
 letterFieldInputUpdate : Model -> LetterField -> String -> ( Model, Effect Msg )
 letterFieldInputUpdate model field inputStr =
@@ -432,6 +574,17 @@ viewLetterForm model =
         , viewLetterFormInput { field = LetterName, value = model.letterForm.name }
         , viewLetterFormInput { field = LetterYearBirth, value = String.fromInt model.letterForm.yearBirth }
         , viewLetterFormInput { field = LetterYearDeath, value = String.fromInt model.letterForm.yearDeath }
+        , Html.div [ Attr.class "field" ]
+            [ Html.label [ Attr.class "checkbox" ]
+                [ Html.input
+                    [ Attr.type_ "checkbox"
+                    , Attr.checked model.letterForm.twoDays
+                    , Html.Events.onCheck TwoDaysInput
+                    ]
+                    []
+                , Html.text " Incluir segunda data"
+                ]
+            ]
         , Html.div
             [ Attr.class "columns is-vcentered is-mobile"
             , Attr.style "z-index" "999"
@@ -452,6 +605,30 @@ viewLetterForm model =
                 ]
                 [ viewTimeEndInput model ]
             ]
+        , if model.letterForm.twoDays then
+            Html.div
+                [ Attr.class "columns is-vcentered is-mobile"
+                , Attr.style "z-index" "998"
+                ]
+                [ Html.div
+                    [ Attr.class "column is-one-third"
+                    , Attr.style "z-index" "998"
+                    ]
+                    [ Components.DatePicker.view model.secondDatePickerModel |> Html.map SecondDatePickerMsg ]
+                , Html.div
+                    [ Attr.class "column is-one-third"
+                    , Attr.style "z-index" "998"
+                    ]
+                    [ viewSecondTimeInput model ]
+                , Html.div
+                    [ Attr.class "column is-one-third"
+                    , Attr.style "z-index" "998"
+                    ]
+                    [ viewSecondTimeEndInput model ]
+                ]
+
+          else
+            Html.text ""
         , viewWakeNameInput model
         , viewLetterFormInput { field = LetterGraveyardName, value = model.letterForm.graveyardName }
         , Html.div [ Attr.class "field" ]
@@ -489,6 +666,104 @@ viewLetterForm model =
                 ]
             ]
         , viewLetterFormControls model
+        ]
+
+
+viewSecondTimeInput : Model -> Html Msg
+viewSecondTimeInput model =
+    Html.div []
+        [ Html.label [ Attr.class "label" ] [ Html.text "Horário (Segunda)" ]
+        , Html.div [ Attr.class "field has-addons" ]
+            [ Html.div [ Attr.class "control" ]
+                [ Html.input
+                    [ Attr.class "input"
+                    , Attr.type_ "number"
+                    , Attr.placeholder "Hora"
+                    , Attr.value
+                        (if model.letterForm.secondHour == -1 then
+                            ""
+
+                         else
+                            String.fromInt model.letterForm.secondHour
+                        )
+                    , Html.Events.onInput SecondHourInput
+                    , Attr.min "0"
+                    , Attr.max "23"
+                    ]
+                    []
+                ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.a [ Attr.class "button is-static" ] [ Html.text "h" ] ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.input
+                    [ Attr.class "input"
+                    , Attr.type_ "number"
+                    , Attr.placeholder "Minuto"
+                    , Attr.value
+                        (if model.letterForm.secondMinute == -1 then
+                            ""
+
+                         else
+                            String.fromInt model.letterForm.secondMinute
+                        )
+                    , Html.Events.onInput SecondMinuteInput
+                    , Attr.min "0"
+                    , Attr.max "59"
+                    ]
+                    []
+                ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.a [ Attr.class "button is-static" ] [ Html.text "m" ] ]
+            ]
+        ]
+
+
+viewSecondTimeEndInput : Model -> Html Msg
+viewSecondTimeEndInput model =
+    Html.div []
+        [ Html.label [ Attr.class "label" ] [ Html.text "Horário Fim (Segunda)" ]
+        , Html.div [ Attr.class "field has-addons" ]
+            [ Html.div [ Attr.class "control" ]
+                [ Html.input
+                    [ Attr.class "input"
+                    , Attr.type_ "number"
+                    , Attr.placeholder "Hora fim"
+                    , Attr.value
+                        (if model.letterForm.secondHourEnd == -1 then
+                            ""
+
+                         else
+                            String.fromInt model.letterForm.secondHourEnd
+                        )
+                    , Html.Events.onInput SecondHourEndInput
+                    , Attr.min "0"
+                    , Attr.max "23"
+                    ]
+                    []
+                ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.a [ Attr.class "button is-static" ] [ Html.text "h" ] ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.input
+                    [ Attr.class "input"
+                    , Attr.type_ "number"
+                    , Attr.placeholder "Minuto fim"
+                    , Attr.value
+                        (if model.letterForm.secondMinuteEnd == -1 then
+                            ""
+
+                         else
+                            String.fromInt model.letterForm.secondMinuteEnd
+                        )
+                    , Html.Events.onInput SecondMinuteEndInput
+                    , Attr.min "0"
+                    , Attr.max "59"
+                    ]
+                    []
+                ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.a [ Attr.class "button is-static" ] [ Html.text "m" ] ]
+            ]
         ]
 
 

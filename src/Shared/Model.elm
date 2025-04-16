@@ -43,6 +43,12 @@ type alias Letter =
     , minute : Int
     , hourEnd : Int
     , minuteEnd : Int
+    , secondDate : EventDate
+    , secondHour : Int
+    , secondMinute : Int
+    , secondHourEnd : Int
+    , secondMinuteEnd : Int
+    , twoDays : Bool
     }
 
 
