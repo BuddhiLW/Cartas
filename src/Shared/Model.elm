@@ -49,6 +49,10 @@ type alias Letter =
     , secondHourEnd : Int
     , secondMinuteEnd : Int
     , twoDays : Bool
+    , noWake : Bool
+    , noWakeDate : EventDate
+    , noWakeHour : Int
+    , noWakeMinute : Int
     }
 
 

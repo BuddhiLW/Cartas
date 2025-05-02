@@ -54,6 +54,7 @@ type alias Model =
     , backgroundUploader : ImageUpload.Model
     , datePickerModel : Components.DatePicker.Model
     , secondDatePickerModel : Components.DatePicker.Model
+    , noWakeDatePickerModel : Components.DatePicker.Model
     , pdfUrl : Maybe String
     , shared : Shared.Model
     }
@@ -77,6 +78,10 @@ type alias Letter =
     , minuteEnd : Int
     , wakeName : String
     , twoDays : Bool
+    , noWake : Bool
+    , noWakeDate : EventDate
+    , noWakeHour : Int
+    , noWakeMinute : Int
     , secondDate : EventDate
     , secondHour : Int
     , secondMinute : Int
@@ -101,6 +106,10 @@ emptyLetterForm =
         59
         ""
         False
+        False
+        (EventDate 0 0 0)
+        -1
+        -1
         (EventDate 0 0 0)
         -1
         -1
@@ -126,6 +135,12 @@ init shared () =
 
         ( secondDatePickerModel, secondDatePickerCmd ) =
             Components.DatePicker.init
+
+        ( noWakeDatePickerModelInit, noWakeDatePickerCmd ) =
+            Components.DatePicker.init
+
+        noWakeDatePickerModel =
+            { noWakeDatePickerModelInit | label = "Data do Sepultamento" }
     in
     ( { letterForm = emptyLetterForm
       , isLoading = False
@@ -136,12 +151,14 @@ init shared () =
       , pdfUrl = Nothing
       , shared = shared
       , secondDatePickerModel = secondDatePickerModel
+      , noWakeDatePickerModel = noWakeDatePickerModel
       }
     , Effect.batch
         [ Effect.map PhotoUploaderMsg (Effect.sendCmd photoUploaderCmd)
         , Effect.map BackgroundUploaderMsg (Effect.sendCmd backgroundUploaderCmd)
         , Effect.map DatePickerMsg (Effect.sendCmd datePickerCmd)
         , Effect.map SecondDatePickerMsg (Effect.sendCmd secondDatePickerCmd)
+        , Effect.map NoWakeDatePickerMsg (Effect.sendCmd noWakeDatePickerCmd)
         ]
     )
 
@@ -166,11 +183,15 @@ type Msg
     | DownloadPdf String
     | SubmitForm
     | TwoDaysInput Bool
+    | NoWakeInput Bool
     | SecondDatePickerMsg Components.DatePicker.Msg
     | SecondHourInput String
     | SecondMinuteInput String
     | SecondHourEndInput String
     | SecondMinuteEndInput String
+    | NoWakeDatePickerMsg Components.DatePicker.Msg
+    | NoWakeHourInput String
+    | NoWakeMinuteInput String
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -385,6 +406,82 @@ update msg model =
             , Effect.none
             )
 
+        NoWakeInput isChecked ->
+            let
+                lf =
+                    model.letterForm
+            in
+            ( { model | letterForm = { lf | noWake = isChecked } }
+            , Effect.none
+            )
+
+        NoWakeDatePickerMsg subMsg ->
+            let
+                ( updatedDPModel, dpCmd ) =
+                    Components.DatePicker.update subMsg model.noWakeDatePickerModel
+
+                newNoWakeDate =
+                    case updatedDPModel.date of
+                        Just _ ->
+                            let
+                                ( day, month, year ) =
+                                    parseDateFromPicker updatedDPModel.dateText
+                            in
+                            EventDate day month year
+
+                        Nothing ->
+                            model.letterForm.noWakeDate
+
+                lf =
+                    model.letterForm
+            in
+            ( { model
+                | noWakeDatePickerModel = updatedDPModel
+                , letterForm = { lf | noWakeDate = newNoWakeDate }
+              }
+            , Effect.map NoWakeDatePickerMsg (Effect.sendCmd dpCmd)
+            )
+
+        NoWakeHourInput inputStr ->
+            let
+                lf =
+                    model.letterForm
+            in
+            if inputStr == "" then
+                ( { model | letterForm = { lf | noWakeHour = -1 } }
+                , Effect.none
+                )
+
+            else
+                case String.toInt inputStr of
+                    Just n ->
+                        ( { model | letterForm = { lf | noWakeHour = clamp 0 23 n } }
+                        , Effect.none
+                        )
+
+                    Nothing ->
+                        ( model, Effect.none )
+
+        NoWakeMinuteInput inputStr ->
+            let
+                lf =
+                    model.letterForm
+            in
+            if inputStr == "" then
+                ( { model | letterForm = { lf | noWakeMinute = -1 } }
+                , Effect.none
+                )
+
+            else
+                case String.toInt inputStr of
+                    Just n ->
+                        ( { model | letterForm = { lf | noWakeMinute = clamp 0 59 n } }
+                        , Effect.none
+                        )
+
+                    Nothing ->
+                        ( model, Effect.none )
+
         SecondDatePickerMsg subMsg ->
             let
                 ( updatedDPModel, dpCmd ) =
@@ -581,19 +678,36 @@ viewLetterForm model =
         , viewLetterFormInput { field = LetterName, value = model.letterForm.name }
         , viewLetterFormInput { field = LetterYearBirth, value = String.fromInt model.letterForm.yearBirth }
         , viewLetterFormInput { field = LetterYearDeath, value = String.fromInt model.letterForm.yearDeath }
-        , Html.div [ Attr.class "field" ]
-            [ Html.label [ Attr.class "checkbox" ]
-                [ Html.input
-                    [ Attr.type_ "checkbox"
-                    , Attr.checked model.letterForm.twoDays
-                    , Html.Events.onCheck TwoDaysInput
+        , Html.div [ Attr.class "columns is-vcentered is-mobile" ]
+            [ Html.div
+                [ Attr.class "column is-one-third"
+                , Attr.classList [ ( "is-hidden", model.letterForm.noWake ) ]
+                ]
+                [ Html.label [ Attr.class "checkbox" ]
+                    [ Html.input
+                        [ Attr.type_ "checkbox"
+                        , Attr.checked model.letterForm.twoDays
+                        , Html.Events.onCheck TwoDaysInput
+                        ]
+                        []
+                    , Html.text " Incluir segunda data"
                     ]
-                    []
-                , Html.text " Incluir segunda data"
+                ]
+            , Html.div [ Attr.class "field column is-one-third" ]
+                [ Html.label [ Attr.class "checkbox" ]
+                    [ Html.input
+                        [ Attr.type_ "checkbox"
+                        , Attr.checked model.letterForm.noWake
+                        , Html.Events.onCheck NoWakeInput
+                        ]
+                        []
+                    , Html.text " Sepultamento direto"
+                    ]
                 ]
             ]
         , Html.div
             [ Attr.class "columns is-vcentered is-mobile"
+            , Attr.classList [ ( "is-hidden", model.letterForm.noWake ) ]
             , Attr.style "z-index" "999"
             ]
             [ Html.div
@@ -614,8 +728,9 @@ viewLetterForm model =
             ]
         , if model.letterForm.twoDays then
             Html.div
-                [ Attr.class "columns is-vcentered is-mobile"
+                [ Attr.class "columns is-vcentered is-mobile mt-5"
                 , Attr.style "z-index" "998"
+                , Attr.classList [ ( "is-hidden", model.letterForm.noWake ) ]
                 ]
                 [ Html.div
                     [ Attr.class "column is-one-third"
@@ -636,6 +751,25 @@ viewLetterForm model =
 
           else
             Html.text ""
+        , if model.letterForm.noWake then
+            Html.div
+                [ Attr.class "columns is-vcentered is-mobile"
+                , Attr.style "z-index" "998"
+                ]
+                [ Html.div
+                    [ Attr.class "column is-one-third"
+                    , Attr.style "z-index" "998"
+                    ]
+                    [ Components.DatePicker.view model.noWakeDatePickerModel |> Html.map NoWakeDatePickerMsg ]
+                , Html.div
+                    [ Attr.class "column is-one-third"
+                    , Attr.style "z-index" "998"
+                    ]
+                    [ viewNoWakeTimeInput model ]
+                ]
+
+          else
+            Html.text ""
         , viewWakeNameInput model
         , viewLetterFormInput { field = LetterGraveyardName, value = model.letterForm.graveyardName }
         , Html.div [ Attr.class "field" ]
@@ -650,7 +784,7 @@ viewLetterForm model =
                             [ ImageUpload.view model.photoUploader |> Html.map PhotoUploaderMsg
                             , Html.div [ Attr.class "flex flex-row" ]
                                 [ Html.p [ Attr.class "is-size-12 mt-3" ] [ Html.text "Caso não selecione uma foto, esta sairá padrão:" ]
-                                , Html.img [ Attr.class "image is-64x64", Attr.src "/assets/luto.png", Attr.alt "Default Profile" ] []
+                                , Html.img [ Attr.class "image is-64x64", Attr.src "/static/luto.png", Attr.alt "Default Profile" ] []
                                 ]
                             ]
                 ]
@@ -667,7 +801,7 @@ viewLetterForm model =
                             [ ImageUpload.view model.backgroundUploader |> Html.map BackgroundUploaderMsg
                             , Html.div [ Attr.class "flex flex-row" ]
                                 [ Html.p [ Attr.class "is-size-12 mt-3" ] [ Html.text "Caso não selecione uma imagem de fundo, esta sairá padrão:" ]
-                                , Html.img [ Attr.class "image is-64x64", Attr.src "/assets/fundo2.png", Attr.alt "Default Background" ] []
+                                , Html.img [ Attr.class "image is-64x64", Attr.src "/static/fundo2.png", Attr.alt "Default Background" ] []
                                 ]
                             ]
                 ]
@@ -714,6 +848,55 @@ viewSecondTimeInput model =
                             String.fromInt model.letterForm.secondMinute
                         )
                     , Html.Events.onInput SecondMinuteInput
+                    , Attr.min "0"
+                    , Attr.max "59"
+                    ]
+                    []
+                ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.a [ Attr.class "button is-static" ] [ Html.text "m" ] ]
+            ]
+        ]
+
+
+viewNoWakeTimeInput : Model -> Html Msg
+viewNoWakeTimeInput model =
+    Html.div []
+        [ Html.label [ Attr.class "label" ] [ Html.text "Horário" ]
+        , Html.div [ Attr.class "field has-addons" ]
+            [ Html.div [ Attr.class "control" ]
+                [ Html.input
+                    [ Attr.class "input"
+                    , Attr.type_ "number"
+                    , Attr.placeholder "Hora"
+                    , Attr.value
+                        (if model.letterForm.noWakeHour == -1 then
+                            ""
+
+                         else
+                            String.fromInt model.letterForm.noWakeHour
+                        )
+                    , Html.Events.onInput NoWakeHourInput
+                    , Attr.min "0"
+                    , Attr.max "23"
+                    ]
+                    []
+                ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.a [ Attr.class "button is-static" ] [ Html.text "h" ] ]
+            , Html.div [ Attr.class "control" ]
+                [ Html.input
+                    [ Attr.class "input"
+                    , Attr.type_ "number"
+                    , Attr.placeholder "Minuto"
+                    , Attr.value
+                        (if model.letterForm.noWakeMinute == -1 then
+                            ""
+
+                         else
+                            String.fromInt model.letterForm.noWakeMinute
+                        )
+                    , Html.Events.onInput NoWakeMinuteInput
                     , Attr.min "0"
                     , Attr.max "59"
                     ]
@@ -913,9 +1096,14 @@ viewTimeEndInput model =
 
 viewWakeNameInput : Model -> Html Msg
 viewWakeNameInput model =
-    Html.div [ Attr.class "field" ]
+    Html.div
+        [ Attr.class "field"
+        , Attr.classList [ ( "is-hidden", model.letterForm.noWake ) ]
+        ]
         [ Html.label [ Attr.class "label" ] [ Html.text "Nome do Velório" ]
-        , Html.div [ Attr.class "control" ]
+        , Html.div
+            [ Attr.class "control"
+            ]
             [ Html.input
                 [ Attr.class "input"
                 , Attr.type_ "text"

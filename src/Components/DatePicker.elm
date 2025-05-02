@@ -23,6 +23,7 @@ import Time exposing (Month(..), Weekday(..))
 type alias Model =
     { date : Maybe Date
     , dateText : String
+    , label : String
     , pickerModel : DatePicker.Model
     }
 
@@ -53,6 +54,7 @@ init : ( Model, Cmd Msg )
 init =
     ( { date = Nothing
       , dateText = ""
+      , label = "Data do Velório"
       , pickerModel = DatePicker.init
       }
     , Task.perform SetToday Date.today
@@ -87,7 +89,7 @@ view model =
         { onChange = ChangePicker
         , selected = model.date
         , text = model.dateText
-        , label = Input.labelAbove [ Font.center, Font.size 20, Font.bold ] <| Element.text "Data do Velório"
+        , label = Input.labelAbove [ Font.center, Font.size 20, Font.bold ] <| Element.text model.label
         , placeholder = Just <| Input.placeholder [ Font.center, Font.size 18, Font.bold ] <| Element.text "Dia/Mês/Ano"
         , settings = settings
         , model = model.pickerModel
