@@ -183,7 +183,7 @@ viewPage model =
                 ]
                 [ Html.div [ Attr.class "has-background-primary has-text-white p-4 " ]
                     [ Html.div [ Attr.class "is-flex is-align-items-center is-justify-content-center" ]
-                        [ Html.img [ Attr.src "/static/logo.png", Attr.style "width" "100px" ] []
+                        [ Html.img [ Attr.src "/logo.png", Attr.style "width" "100px" ] []
                         , Html.h1 [ Attr.class "title is-3 has-text-white" ] [ Html.text "Notas de Falecimento" ]
                         ]
                     , Html.p [ Attr.class "subtitle is-6 has-text-white has-text-centered" ] [ Html.text "Por favor, faça login para continuar" ]

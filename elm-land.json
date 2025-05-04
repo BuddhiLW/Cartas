@@ -13,7 +13,7 @@
           "link": [
             {
               "rel": "icon",
-              "href": "/static/logo.png",
+              "href": "/logo.png",
               "type": "image/x-icon"
             }
           ],
@@ -48,7 +48,7 @@
       "link": [
         {
           "rel": "icon",
-          "href": "/static/logo.png",
+          "href": "/logo.png",
           "type": "image/x-icon"
         },
         {

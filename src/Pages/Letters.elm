@@ -784,7 +784,7 @@ viewLetterForm model =
                             [ ImageUpload.view model.photoUploader |> Html.map PhotoUploaderMsg
                             , Html.div [ Attr.class "flex flex-row" ]
                                 [ Html.p [ Attr.class "is-size-12 mt-3" ] [ Html.text "Caso não selecione uma foto, esta sairá padrão:" ]
-                                , Html.img [ Attr.class "image is-64x64", Attr.src "/static/luto.png", Attr.alt "Default Profile" ] []
+                                , Html.img [ Attr.class "image is-64x64", Attr.src "/luto.png", Attr.alt "Default Profile" ] []
                                 ]
                             ]
                 ]
@@ -801,7 +801,7 @@ viewLetterForm model =
                             [ ImageUpload.view model.backgroundUploader |> Html.map BackgroundUploaderMsg
                             , Html.div [ Attr.class "flex flex-row" ]
                                 [ Html.p [ Attr.class "is-size-12 mt-3" ] [ Html.text "Caso não selecione uma imagem de fundo, esta sairá padrão:" ]
-                                , Html.img [ Attr.class "image is-64x64", Attr.src "/static/fundo2.png", Attr.alt "Default Background" ] []
+                                , Html.img [ Attr.class "image is-64x64", Attr.src "/fundo2.png", Attr.alt "Default Background" ] []
                                 ]
                             ]
                 ]
